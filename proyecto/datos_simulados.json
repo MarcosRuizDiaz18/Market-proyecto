@@ -1,0 +1,14 @@
+{
+  "id": "101",
+  "titulo": "Motosierra Stihl MS 170",
+  "descripcion": "Ideal para poda de árboles medianos.",
+  "categoria": "Jardinería",
+  "precioBase": 15000,
+  "tipoCobro": "por día",
+  "partido": "Lomas de Zamora",
+  "localidad": "Temperley",
+  "ofreceServicio": true,
+  "precioServicio": 8000,
+  "vendedor": { "nombre": "Carlos", "reputacion": 4.8 },
+  "estado": "disponible"
+}

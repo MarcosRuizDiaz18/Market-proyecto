@@ -1,0 +1,8 @@
+Agregar: 
+Cambiar boton de "yo" en el perfil propio - Listo
+Que el boton de "iniciar sesion" funcione como tal
+	Chequeo de que tengas sesion cuando quieras crear una publicacion
+		Agregar imagenes para las publicaciones guardandose localmente en pc
+Ubicacion cuando haces la publicación (que pregunte el navegador) ((comparativa con la persona la que le vas a contratar)) 
+Filtros funcionales (todos)
+Mapa interactivo
