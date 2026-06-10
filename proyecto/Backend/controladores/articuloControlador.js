@@ -1,6 +1,7 @@
 // controladores/articuloControlador.js
 const mongoose = require("mongoose");
 const Articulo = require("../modelos/Articulo");
+const Usuario = require('../modelos/Usuario');
 
 // ─── Helper: manejo centralizado de errores de Mongoose ───────────────────
 const manejarErrorMongo = (error, respuesta, siguiente) => {
@@ -21,18 +22,46 @@ const esIdValido = (id) => mongoose.Types.ObjectId.isValid(id);
 // Crea un artículo nuevo
 const crearArticulo = async (solicitud, respuesta, siguiente) => {
   try {
-    const nuevoArticulo = new Articulo(solicitud.body);
+    if (solicitud.file) {
+      solicitud.body.imagen = `/uploads/${solicitud.file.filename}`;
+    }
+
+    const idUsuario = solicitud.body.idVendedor;
+    const usuarioPerfil =  await Usuario.findById(idUsuario);
+
+    if(!usuarioPerfil) {
+      return respuesta.status(404).json({ error: "No se encontro el perfil del usuario." });
+    }
+
+    solicitud.body.titulo = solicitud.body.nombre;
+    solicitud.body.precioBase = solicitud.body.precio;
+    solicitud.body.categoria = "Herramientas";
+
+    solicitud.body.partido = usuarioPerfil.partido || "Sin partido configurado";
+    solicitud.body.localidad = usuarioPerfil.localidad || "Sin localidad mencionada";
+    solicitud.body.latitud = usuarioPerfil.latitud || 0;
+    solicitud.body.longitud = usuarioPerfil.longitud || 0;
+
+    solicitud.body.vendedor = {
+      _id: usuarioPerfil._id,
+      nombre: usuarioPerfil.nombre
+    };
+
+    const nuevoArticulo = new Articulo(solicitud.body)
     const articuloGuardado = await nuevoArticulo.save();
 
     respuesta.status(201).json({
-      mensaje: "Artículo creado correctamente.",
+      mensaje: "Articulo creado correctamente!",
       articulo: articuloGuardado,
     });
   } catch (error) {
+    console.log("======DETALLE DEL ERROR======");
+    console.log(solicitud.body);
+    console.log("=============================");
+
     manejarErrorMongo(error, respuesta, siguiente);
   }
 };
-
 // ─── GET /api/articulos ────────────────────────────────────────────────────
 // Lista artículos con filtros opcionales combinables por query string.
 //
@@ -89,7 +118,7 @@ const obtenerArticulos = async (solicitud, respuesta, siguiente) => {
     }
     
     //ejecutamos la consulta
-    const listaArticulos = (await Articulo.find(filtro)).toSorted({ creadoEn: -1});
+    const listaArticulos = await Articulo.find(filtro).sort({ creadoEn: -1 });
 
     respuesta.status(200).json({
       total: listaArticulos.length,

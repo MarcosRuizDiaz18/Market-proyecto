@@ -572,17 +572,22 @@
       <button class="type-btn active" id="btnProd" onclick="setType('Producto')">Producto</button>
       <button class="type-btn inactive" id="btnServ" onclick="setType('Servicio')">Servicio</button>
     </div>
-    <label class="field-lbl">Nombre</label>
-    <input class="field-inp" placeholder="Ej: Taladro Bosch / Electricista"/>
-    <label class="field-lbl">Precio</label>
-    <input class="field-inp" placeholder="$0.000"/>
-    <label class="field-lbl">Ubicación</label>
-    <input class="field-inp" placeholder="Barrio, Ciudad"/>
-    <div class="upload-area">
-      <div style="font-size:24px">📷</div>
-      <div style="font-size:11px;color:#999;margin-top:4px">Subir fotos</div>
-    </div>
-    <button class="btn-publish" onclick="document.getElementById('uploadModal').classList.add('hidden')">Publicar</button>
+    <form id="formulario-publicar">
+      <label class="field-lbl">nombre</label>
+      <input class="field-inp" name="nombre" placeholder="Ej. Taladro Bosch / Electricista" required />
+
+      <label class="field-lbl">Precio</label>
+      <input class="field-inp" name="precio" type="number" placeholder="$0.000" required/>
+
+      <label class="field-lbl">Ubicacion</label>
+      <input class="field-inp" name="ubicacion" placeholder="Barrio, Ciudad" required />
+
+      <div class="upload-area" style="padding: 20px 10px;">
+        <input type="file" id="imagen" name="imagen" accept="image/*" required>
+      </div>
+
+      <button type="submit" class="btn-publish">Publicar</button>
+    </form>
   </div>
 </div>
 
@@ -590,6 +595,8 @@
 const ACCENT = "#E2FF00";
 const COLORS = ["#3B82F6","#8B5CF6","#EC4899","#F59E0B","#10B981","#06B6D4","#EF4444"];
 
+const products = [];
+const services = [];
 const allItems = [...products, ...services];
 const TABS = ["Todo","Productos","Servicios","Cámaras","Herramientas","Electricidad","Plomería"];
 let activeTab = "Todo";
@@ -645,49 +652,56 @@ function verifiedSVG() {
 }
 
 function renderCard(item) {
-  const isService = item.type === 'service';
-  const priceLabel = isService ? '/visita' : '/día';
-  const savings = Math.round(item.price * 12);
-  const isSaved = savedSet.has(item.id);
-  const isLiked = likedSet.has(item.id);
+  const idStr = item._id || item.id;
+  const isService = item.tipo === 'servicio' || item.type === 'service';
+  const priceLabel = isService ? '/visita' : `/${item.tipoCobro || 'día'}`;
+
+  const precioFijo = item.precioBase || item.price || 0;
+  const savings = Math.round(precioFijo * 12);
+  const isSaved = savedSet.has(idStr);
+  const isLiked = likedSet.has(idStr);
+
+  const titulo = item.titulo || item.name || 'Sin titutulo';
+  const imagenReal = item.imagen ? `http://localhost:3000${item.imagen}` : '';
+  const vendedorNom = (item.vendedor && item.vendedor.nombre) ? item.vendedor.nombre : 'usuario';
+  const ubicacionStr = item.localidad || item.location || 'ubicacion no especificada';
+  const catStr = item.categoria || item.category || '';
+  const ratingNum = item.rating || 5;
+
   return `
-    <div class="card" id="card-${item.id}">
+    <div class="card" id="card-${idStr}">
       ${isService ? `<div class="service-label">SERVICIO</div>` : ''}
       <div class="card-header">
         <div class="card-user">
-          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${getColor(item.user)}">${getInitials(item.user)}</div>
-          <span class="card-username">${item.user}</span>
-          ${item.verified ? verifiedSVG() : ''}
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${getColor(vendedorNom)}">${getInitials(vendedorNom)}</div>
+          <span class="card-username">${vendedorNom}</span>
         </div>
-        <button class="save-btn" onclick="toggleSave(${item.id})" title="Guardar">
-          <svg width="15" height="15" viewBox="0 0 24 24"
-            fill="${isSaved?'#F5B800':'none'}" stroke="${isSaved?'#F5B800':'#999'}" stroke-width="2">
+        <button class="save-btn" onclick="toggleSave('${idStr}')" title="Guardar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isSaved?'#F5B800':'none'}" stroke="${isSaved?'#F5B800':'#999'}" stroke-width="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
           </svg>
         </button>
       </div>
       <div class="card-img">
-        <img src="${item.image}" alt="${item.name}" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#EFEFEF;font-size:42px;gap:6px&quot;>${item.emoji||'🔧'}</div>'"/>
-        ${isService && item.badge ? `<div class="card-badge-emoji">${item.badge}</div>` : ''}
+        <img src="${imagenReal}" alt="${titulo}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+Imagen'">
       </div>
       <div class="card-body">
-        <div class="card-name" title="${item.name}">${item.name}</div>
-        ${isService ? `<div class="card-category">${item.category}</div>` : ''}
-        <div class="stars">${starsSVG(item.rating)}</div>
+        <div class="card-name" title="${titulo}">${titulo}</div>
+        ${isService ? `<div class="card-category">${catStr}</div>` : ''}
+        <div class="stars">${starsSVG(ratingNum)}</div>
         <div class="card-meta">
           <div class="card-location">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
             </svg>
-            ${item.location}
+            ${ubicacionStr}
           </div>
-          <div class="price-badge">$${item.price.toLocaleString('es-AR')}${priceLabel}</div>
+          <div class="price-badge">$${precioFijo.toLocaleString('es-AR')}${priceLabel}</div>
         </div>
-        <div class="card-saving">${isService ? 'Presupuesto sin cargo · Responde en &lt;1h' : `Ahorro: $${savings.toLocaleString('es-AR')} vs. compra nuevo`}</div>
+        <div class="card-saving">${isService ? 'Presupuesto sin cargo · Responde en &lt;1h' : `Ahorro: $${savings.toLocaleString('es-AR')} vs nuevo`}</div>
         <div class="card-actions">
-          <button class="action-btn" onclick="toggleLike(${item.id})" style="color:${isLiked?'#F5B800':'#999'}">
-            <svg width="13" height="13" viewBox="0 0 24 24"
-              fill="${isLiked?'#F5B800':'none'}" stroke="${isLiked?'#F5B800':'#999'}" stroke-width="2">
+          <button class="action-btn" onclick="toggleLike('${idStr}')" style="color:${isLiked?'#F5B800':'#999'}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="${isLiked?'#F5B800':'none'}" stroke="${isLiked?'#F5B800':'#999'}" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
             Me gusta
@@ -707,20 +721,20 @@ async function renderFeed() {
   const buscador = document.getElementById('searchInput')?.value.trim() || '';
 
   let estrellas = '';
-  if (document.querySelector('#s5').previousElementSibling.checked) estrellas = '5';
-  else if (document.querySelector('#s4').previousElementSibling.checked) estrellas = '4';
-  else if (document.querySelector('#3').previousElementSibling.checked) estrellas = '3';
+  if (document.getElementById('s5')?.previousElementSibling?.checked) estrellas = '5';
+  else if (document.getElementById('s4')?.previousElementSibling?.checked) estrellas = '4';
+  else if (document.getElementById('s3')?.previousElementSibling?.checked) estrellas = '3';
 
   let categoria = '';
   if (activeTab === 'Herramientas') categoria = 'Herramientas';
   if (activeTab === 'Electricidad') categoria = 'Electricidad';
   if (activeTab === 'Plomeria') categoria = 'Plomeria';
 
-  let url = '${URL_BACKEND}/api/articulos?';
+  let url = `${URL_BACKEND}/api/articulos?`;
 
-  if (buscador) url += 'localidad=${buscador}&';
-  if (categoria) url += 'categoria=${categoria}&';
-  if (estrellas) url += 'estrellas=${estrellas}&';
+  if (buscador) url += `localidad=${buscador}&`;
+  if (categoria) url += `categoria=${categoria}&`;
+  if (estrellas) url += `estrellas=${estrellas}&`;
 
   try{
     const respuesta = await fetch (url);
@@ -738,7 +752,16 @@ async function renderFeed() {
       count.textContent = '0 resultados';
     } else {
       empty.classList.add('hidden');
-      grid.innerHTML = datos.articulos.map(renderCard).join('');
+      const tarjetasHTML = datos.articulos.map(renderCard).join('');
+      console.log("HTML generado por renderCard:", tarjetasHTML);
+      console.log("Artículos crudos que llegaron:", datos.articulos);
+
+      // 2. Lo metemos en la grilla y FORZAMOS que se vea
+      grid.innerHTML = tarjetasHTML;
+      grid.style.display = "grid"; 
+      grid.style.opacity = "1";
+      
+      // 3. Actualizamos el contador
       count.textContent = `${datos.total} resultado${datos.total !== 1 ? 's' : ''}`;
     }
   }catch (error){
@@ -944,7 +967,7 @@ async function enviarRegistro() {
   ponerCargando(true);
 
   try {
-    const respuesta = await fetch(`${URL_BACKEND}/api/usuarios/registro`, {
+    const respuesta = await fetch(`http://localhost:3000/api/usuarios/registro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -981,6 +1004,49 @@ document.addEventListener('keydown', function(e) {
   if (modalAbierto && e.key === 'Enter') enviarRegistro();
 });
 
+const formPublicar = document.getElementById("formulario-publicar");
+
+if (formPublicar) {
+  formPublicar.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    const datosFormulario= new FormData(formPublicar);
+
+    const botonActivo = document.querySelector(".type-btn.active");
+    if (botonActivo) {
+      datosFormulario.append("tipo", botonActivo.innerText.trim());
+    }
+    const usuarioGuardado = localStorage.getItem('usuarioEquipYa');
+    if (usuarioGuardado) {
+      const usuario = JSON.parse(usuarioGuardado);
+      datosFormulario.append("idVendedor", usuario._id || usuario.id);
+    } else {
+      alert("¡Tenes que iniciar sesion para publicar un articulo!");
+      return;
+    }
+
+    try{
+      const respuesta =await fetch("http://localhost:3000/api/articulos", {
+        method: "POST",
+        body: datosFormulario
+      });
+
+      const resultado =await respuesta.json();
+
+      if(respuesta.ok) {
+        alert("¡Publicacion subida con exito!");
+
+        formPublicar.reset();
+        document.getElementById("uploadModal").classList.add('hidden');
+      } else {
+        alert("Hubo un error al publicar: " + (resultado.error || "Revisa los datos."));
+      }
+    } catch (error) {
+      console.error("Error en la peticion:", error);
+      alert("No se pudo conectar con el servidor.");
+    }
+  });
+}
 
 init();
 // Ejecutar avatar al cargar
@@ -1020,6 +1086,35 @@ actualizarAvatar();
     <div class="alerta-registro" id="reg-alerta"></div>
     <div class="registro-pie">
       ¿Ya tenés cuenta? <a onclick="cerrarModalRegistro()">Iniciá sesión</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="loginModal" onclick="if(event.target.id==='loginmodal') cerrarModalLogin()">
+  <div class="registro-modal" onclick="event.stopPropagation()">
+    <div class="registro-header">
+      <div class="registro-logo">Equip<span>Ya</span></div>
+    </div>
+    <div class="registro-titulo">Iniciar Sesion</div>
+    <div class="registro-sub">Ingresa para alquilar o publicar.</div>
+
+    <div class="campo-grupo">
+      <label for="log-email">Email</label>
+      <input type="email" id="log-email" placeholder="juan@ejemplo.com"/>
+    </div>
+    <div class="campo-grupo">
+      <label for="log-contraseña">Contraseña</label>
+      <input type="password" id="log-contraseña" placeholder="••••••••"/>
+    </div>
+
+    <button class="btn-registrarse" id="btnLogin" onclick="enviarLogin()">
+      <span id="btn-login-texto">Ingresar</span>
+      <div class="spinner" id="log-spinner"></div>
+    </button>
+    <div class="alerta-registro" id="log-alerta"></div>
+
+    <div class="registro-pie">
+      ¿No tenes cuenta? <a onclick="cerrarModaLogin(); abrirModalRegistro()">Registrate gratis</a>
     </div>
   </div>
 </div>

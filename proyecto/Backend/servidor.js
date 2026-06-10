@@ -2,6 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const conectarBaseDeDatos = require("./configuracion/baseDeDatos");
 
 const app = express();
@@ -35,7 +36,7 @@ app.options(/(.*)/, cors(opcionesCors));
 // ─── Middlewares globales ──────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use("/uploads", express.static("uploads"));
 // ─── Middleware de logging (solo en desarrollo) ───────────────────────────
 if (process.env.NODE_ENV !== "produccion") {
   app.use((solicitud, respuesta, siguiente) => {

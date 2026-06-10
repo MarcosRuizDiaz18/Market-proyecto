@@ -9,6 +9,20 @@ const {
   eliminarArticulo,
 } = require("../controladores/articuloControlador");
 
+const multer =require("multer");
+const path =require("path");
+
+const configuracionAlmacenamiento = multer.diskStorage({
+  destination: function (solicitud, archivo, cb){
+    cb(null, "uploads/"); //guarda fisicamente en la carpeta uploads
+  },
+  filename: function(solicitud, archivo, cb) {
+    //le pone la fecha exacta por delante para evitar nombres duplicados
+    cb(null, Date.now() + path.extname(archivo.originalname));
+  }
+});
+
+const upload = multer({ storage: configuracionAlmacenamiento });
 // ┌─────────────────────────────────────────────────────────────┐
 // │  Método  │  Ruta                  │  Acción                 │
 // ├─────────────────────────────────────────────────────────────┤
@@ -21,7 +35,7 @@ const {
 
 enrutador.route("/")
   .get(obtenerArticulos)
-  .post(crearArticulo);
+  .post(upload.single("imagen"), crearArticulo);
 
 enrutador.route("/:id")
   .get(obtenerArticuloPorId)

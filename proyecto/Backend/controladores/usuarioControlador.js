@@ -1,4 +1,5 @@
 const Usuario = require("../modelos/Usuario");
+const bcrypt = require('bcryptjs');
 
 // ─── Helper: manejo centralizado de errores de Mongoose ───────────────────
 const manejarErrorMongo = (error, respuesta, siguiente) => {
@@ -18,9 +19,9 @@ const manejarErrorMongo = (error, respuesta, siguiente) => {
 // roles (opcional, default ["cliente"]) y perfilProfesional (opcional)
 const registrarUsuario = async (req, res, next) => {
     try {
-        // TODO: encriptar contraseña con bcrypt antes de guardar
-        // const sal = await bcrypt.genSalt(10);
-        // req.body.contraseña = await bcrypt.hash(req.body.contraseña, sal);
+        //encriptamos la contraseña con bcrypt antes de guardar
+        const sal = await bcrypt.genSalt(10);
+        req.body.contraseña = await bcrypt.hash(req.body.contraseña, sal);
 
         const nuevoUsuario = new Usuario(req.body);
         const usuarioGuardado = await nuevoUsuario.save();
@@ -67,7 +68,36 @@ const obtenerPerfil = async (req, res, next) => {
     }
 };
 
+const login = async (solicitud, respuesta, siguiente) => {
+    try {
+        const {email, contraseña} = solicitud.body;
+
+        // Buscamos el usuario por email y exigimos que traiga la contaseña oculta
+        const usuario = await Usuario.findOne ({ email }).select('+contraseña');
+        //si no existe el usuario, respondemos con un error generico por seguridad
+        if (!usuario) {
+            return respuesta.status(400).json({ error: "El email o la contraseña son incorrectos." });
+        }
+        //comparamos la contraseña desencriptando con bcrypt
+        const contraseñaValida = await bcrypt.compare(contraseña, usuario.contraseña);
+        
+        if (!contraseñaValida) {
+            return respuesta.status(400).json({error: "El email o la contraseña son incorrectos. "});
+        }
+        //si las credenciales son validas, preparamos los datos para el front-end
+        const usuarioLogueado = usuario.toObject();
+        delete usuarioLogueado.contraseña //la borramos antes de enviarla para que no viaje por la red
+
+        respuesta.status(200).json({
+            mensaje : "Inicio de sesion exitoso.",
+            usuario : usuarioLogueado
+        });
+    } catch (error) {
+        siguiente(error);
+    }
+};
 module.exports = {
     registrarUsuario,
-    obtenerPerfil
+    obtenerPerfil,
+    login
 };
