@@ -1,8 +1,19 @@
+solucion de errores:
+publicaciones sin fotos = las primeras publicaciones de prueba en la base de datos guardaron la imagen rota, solo falta hacer que aparezca la imagen a la hora de publicar
+
+aparece nombre del vendedor en vez del nombre del articulo = faltaria enlazarlo con la sesion real de quien lo publicacion
+
 Agregar: 
 Cambiar boton de "yo" en el perfil propio - Listo
 Que el boton de "iniciar sesion" funcione como tal
 	Chequeo de que tengas sesion cuando quieras crear una publicacion
-		Agregar imagenes para las publicaciones guardandose localmente en pc
+		que puedas cerrar sesion y volver a iniciarla
 Ubicacion cuando haces la publicación (que pregunte el navegador) ((comparativa con la persona la que le vas a contratar)) 
 Filtros funcionales (todos)
 Mapa interactivo
+funciones a cada uno de los botones del sistema
+
+que se hizo? se creo toda la creacion de una publicacion en tiempo real, se implemento una ruta GET /api/articulos en el Back-end para buscar y ordenar los productos del mas nuevo al mas viejo
+gestion de archivos locales, se configuro con el servidor para permitir el acceso publico /uploads y servir las imagenes subidas por los usuarios
+renderizado dinamico, la grilla principal ahora lee la base de datos en tiempo real
+toda la base de datos conectada configurada con MongoDB mendiante mongoose, logrando guardar los datos enviador desde el navegador
