@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Montserrat', sans-serif; background: #F5F5F5; color: #111; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+/* HEADER */
+.ey-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 24px; background: #fff;
+  border-bottom: 1px solid #E0E0E0;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 16px rgba(0,0,0,0.07);
+}
+.ey-logo { font-size: 24px; font-weight: 900; color: #111; letter-spacing: -1px; white-space: nowrap; }
+.ey-logo span { background: #111; color: #E2FF00; border-radius: 6px; padding: 0 5px; }
+.ey-search-wrap { flex: 1; position: relative; max-width: 560px; margin: 0 auto; }
+.ey-search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.ey-search-wrap input {
+  width: 100%; padding: 10px 16px 10px 38px;
+  background: #F0F0F0; border: 1.5px solid #E0E0E0;
+  border-radius: 50px; font-family: inherit; font-size: 13px; outline: none;
+  transition: border-color .2s;
+}
+.ey-search-wrap input:focus { border-color: #111; }
+.ey-header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.ey-btn-ai {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: #111; border: 2px solid #E2FF00;
+  border-radius: 50px; color: #E2FF00; font-weight: 700; font-size: 12px;
+  cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap;
+}
+.ey-btn-ai:hover { background: #E2FF00; color: #111; }
+.ey-btn-upload {
+  padding: 9px 18px; background: #E2FF00; border: none; border-radius: 50px;
+  color: #111; font-weight: 800; font-size: 12px; cursor: pointer;
+  font-family: inherit; box-shadow: 0 2px 12px #E2FF0088;
+  transition: all .15s; white-space: nowrap;
+}
+.ey-btn-upload:hover { background: #C8E600; transform: scale(1.03); }
+.ey-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0;
+}
+
+/* TABS */
+.ey-tabs {
+  background: #fff; border-bottom: 1px solid #E0E0E0;
+  padding: 0 24px; display: flex; gap: 4px; overflow-x: auto;
+}
+.ey-tab {
+  padding: 10px 16px; background: transparent; border: none; border-bottom: 2.5px solid transparent;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: #999;
+  cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.ey-tab.active { color: #111; border-bottom-color: #E2FF00; }
+
+/* LAYOUT */
+.ey-body { display: flex; padding: 16px; max-width: 1500px; margin: 0 auto; gap: 16px; }
+
+/* SIDEBAR */
+.ey-aside {
+  width: 260px; flex-shrink: 0; background: #fff; border-radius: 24px;
+  padding: 14px; height: fit-content; position: sticky; top: 103px;
+  border: 1px solid #E0E0E0; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+}
+.ey-map {
+  border-radius: 14px; overflow: hidden; position: relative;
+  height: 170px; background: #E8EEF4; border: 1px solid #E0E0E0;
+}
+.ey-map-lbl { position: absolute; top: 6px; left: 8px; font-size: 9px; color: #555; font-weight: 700; }
+.ey-map-zoom { position: absolute; bottom: 6px; right: 8px; display: flex; gap: 4px; }
+.ey-map-zoom button {
+  background: #fff; border: 1px solid #E0E0E0; color: #111;
+  width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+  font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.ey-filter-section { margin-top: 14px; }
+.ey-filter-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ey-filter-icon {
+  width: 26px; height: 26px; background: #E2FF00; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ey-filter-title span { font-weight: 700; font-size: 13px; }
+.ey-divider { height: 1px; background: #E0E0E0; margin: 12px 0; }
+.ey-inp {
+  width: 100%; padding: 8px 12px; background: #F0F0F0;
+  border: 1px solid #E0E0E0; border-radius: 10px; font-family: inherit;
+  font-size: 12px; outline: none; color: #111;
+}
+.ey-inp:focus { border-color: #111; }
+.ey-btn-sede {
+  width: 100%; padding: 7px 12px; background: #111; border: none;
+  border-radius: 10px; color: #E2FF00; font-weight: 800; font-size: 11px;
+  cursor: pointer; margin-bottom: 8px; font-family: inherit;
+}
+.ey-km-btns { display: flex; gap: 4px; margin-top: 8px; }
+.ey-km-btn {
+  flex: 1; padding: 5px 0; background: #F0F0F0; border: 1px solid #E0E0E0;
+  border-radius: 8px; color: #555; font-size: 11px; cursor: pointer;
+  font-family: inherit; font-weight: 600;
+}
+.ey-km-btn:hover { background: #E2FF00; border-color: #E2FF00; color: #111; }
+.ey-btn-filter {
+  width: 100%; padding: 10px; background: #111; border: none;
+  border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 12px;
+  cursor: pointer; font-family: inherit; margin-top: 4px; transition: background .2s;
+}
+.ey-btn-filter:hover { background: #333; }
+
+/* FEED */
+.ey-main { flex: 1; min-width: 0; }
+.ey-ai-banner {
+  background: #111; border-radius: 16px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+  cursor: pointer; border: 1.5px solid rgba(226,255,0,0.15);
+  transition: border-color .2s;
+}
+.ey-ai-banner:hover { border-color: #E2FF00; }
+.ey-ai-icon { width: 44px; height: 44px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.ey-banner-arrow { margin-left: auto; color: #E2FF00; font-size: 20px; }
+.ey-feed-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.ey-feed-count { font-size: 12px; color: #999; font-weight: 500; }
+.ey-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 13px; }
+
+/* CARD */
+.ey-card {
+  background: #fff; border-radius: 20px; overflow: hidden;
+  border: 1px solid #E0E0E0; cursor: pointer;
+  transition: transform .2s, box-shadow .2s; position: relative;
+}
+.ey-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+.ey-card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; }
+.ey-card-user { display: flex; align-items: center; gap: 8px; }
+.ey-card-username { font-size: 11px; font-weight: 600; }
+.ey-card-img { aspect-ratio: 4/3; overflow: hidden; position: relative; background: #F0F0F0; display: flex; align-items: center; justify-content: center; }
+.ey-card-emoji { font-size: 52px; }
+.ey-service-label {
+  position: absolute; top: 52px; left: 12px; z-index: 3;
+  background: #111; color: #E2FF00; font-size: 10px; font-weight: 800;
+  border-radius: 20px; padding: 3px 10px; letter-spacing: .5px;
+}
+.ey-card-body { padding: 10px 12px 12px; }
+.ey-card-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ey-card-category { font-size: 10px; font-weight: 600; color: #3B82F6; margin-bottom: 4px; }
+.ey-stars { display: flex; gap: 2px; }
+.ey-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.ey-card-location { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #999; }
+.ey-price-badge { background: #E2FF00; border-radius: 8px; padding: 3px 9px; font-weight: 800; font-size: 11px; color: #111; box-shadow: 0 2px 8px rgba(226,255,0,0.4); }
+.ey-card-saving { margin-top: 4px; font-size: 10px; color: #999; }
+.ey-card-actions { display: flex; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E0E0E0; }
+.ey-action-btn {
+  background: none; border: none; cursor: pointer; display: flex;
+  align-items: center; gap: 5px; color: #999; font-size: 11px;
+  font-family: inherit; padding: 0; transition: color .15s;
+}
+.ey-action-btn:hover { color: #555; }
+.ey-save-btn { background: none; border: none; cursor: pointer; padding: 4px; }
+
+/* EMPTY */
+.ey-empty { text-align: center; padding: 80px 0; color: #999; }
+.ey-empty-icon { font-size: 48px; }
+.ey-empty p { margin-top: 12px; font-size: 16px; }
+
+/* LOADING */
+.ey-loading { text-align: center; padding: 60px 0; color: #999; }
+.ey-spinner-lg {
+  width: 36px; height: 36px; border: 3px solid #E0E0E0;
+  border-top-color: #E2FF00; border-radius: 50%;
+  animation: spin 0.7s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* CHAT BUBBLE */
+.ey-chat-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 200; }
+.ey-chat-panel { background: #fff; border: 1px solid #E0E0E0; border-radius: 16px; width: 275px; padding: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.ey-chat-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ey-chat-panel-header span { font-weight: 700; font-size: 13px; }
+.ey-chat-close { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; }
+.ey-chat-info { background: #F0F0F0; border-radius: 10px; padding: 12px; font-size: 12px; color: #999; text-align: center; }
+.ey-chat-input { width: 100%; margin-top: 10px; padding: 8px 12px; background: #F0F0F0; border: 1px solid #E0E0E0; border-radius: 10px; font-family: inherit; font-size: 12px; outline: none; }
+.ey-chat-bubble-btn {
+  width: 54px; height: 54px; background: #111; border-radius: 50%;
+  border: 3px solid #E2FF00; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2); position: relative; transition: transform .2s;
+}
+.ey-chat-bubble-btn:hover { transform: scale(1.1); }
+.ey-chat-notif { position: absolute; top: -4px; right: -4px; width: 17px; height: 17px; background: #ef4444; border-radius: 50%; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid #F5F5F5; }
+.ey-chat-label { font-size: 10px; color: #999; font-weight: 600; }
+
+/* AI MODAL */
+.ey-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; }
+.ey-ai-modal { background: #fff; border-radius: 28px; width: 520px; max-width: 95vw; height: 82vh; display: flex; flex-direction: column; box-shadow: 0 32px 100px rgba(0,0,0,0.25); overflow: hidden; }
+.ey-ai-modal-header { background: #111; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+.ey-ai-modal-icon { width: 40px; height: 40px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.ey-ai-modal-title { font-weight: 800; font-size: 15px; color: #E2FF00; }
+.ey-ai-modal-sub { font-size: 11px; color: #888; }
+.ey-ai-modal-close { margin-left: auto; background: none; border: none; color: #666; cursor: pointer; font-size: 22px; line-height: 1; }
+.ey-quick-chips { padding: 12px 16px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ey-chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: #F0F0F0; border: 1px solid #E0E0E0; color: #555;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.ey-chip:hover { background: #E2FF00; color: #111; border-color: #E2FF00; }
+.ey-ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.ey-msg-row { display: flex; }
+.ey-msg-row.user { justify-content: flex-end; }
+.ey-msg-bot-icon { width: 28px; height: 28px; background: #E2FF00; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+.ey-msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+.ey-msg-bubble.bot { background: #F0F0F0; color: #111; border-bottom-left-radius: 4px; }
+.ey-msg-bubble.user { background: #111; color: #E2FF00; border-bottom-right-radius: 4px; }
+.ey-ai-input-row { padding: 12px 16px 16px; border-top: 1px solid #E0E0E0; display: flex; gap: 8px; }
+.ey-ai-text-input {
+  flex: 1; padding: 11px 14px; background: #F0F0F0; border: 1.5px solid #E0E0E0;
+  border-radius: 12px; font-family: inherit; font-size: 13px; outline: none; color: #111;
+}
+.ey-ai-text-input:focus { border-color: #111; }
+.ey-ai-send { width: 44px; height: 44px; background: #111; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.ey-ai-send:hover { background: #333; }
+.ey-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+.ey-typing-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; animation: bounce 1s infinite; }
+.ey-typing-dot:nth-child(2) { animation-delay: .2s; }
+.ey-typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+/* UPLOAD MODAL */
+.ey-upload-modal { background: #fff; border-radius: 24px; padding: 28px; width: 400px; max-width: 90vw; box-shadow: 0 24px 80px rgba(0,0,0,0.2); }
+.ey-upload-title { font-weight: 800; font-size: 18px; margin-bottom: 4px; }
+.ey-upload-sub { color: #999; font-size: 12px; margin-bottom: 16px; }
+.ey-type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+.ey-type-btn { flex: 1; padding: 8px; border-radius: 10px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all .15s; }
+.ey-type-btn.active { background: #111; border: 1px solid #111; color: #E2FF00; }
+.ey-type-btn.inactive { background: #F0F0F0; border: 1px solid #E0E0E0; color: #555; }
+.ey-field-lbl { font-size: 11px; font-weight: 700; color: #555; display: block; margin-bottom: 4px; margin-top: 8px; }
+.ey-field-inp { width: 100%; padding: 9px 12px; background: #F0F0F0; border: 1.5px solid #E0E0E0; border-radius: 10px; font-family: inherit; font-size: 12px; outline: none; color: #111; }
+.ey-field-inp:focus { border-color: #111; }
+.ey-upload-area { border: 2px dashed #E0E0E0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #F0F0F0; margin: 12px 0; }
+.ey-btn-publish { width: 100%; padding: 11px; background: #111; border: none; border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; margin-top: 4px; }
+.ey-btn-publish:hover { background: #333; }

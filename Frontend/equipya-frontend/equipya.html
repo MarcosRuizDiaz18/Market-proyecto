@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EquipYa — Alquiler de herramientas y servicios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Montserrat', sans-serif; background: #F5F5F5; color: #111; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    /* ── HEADER ── */
+    header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 24px; background: #fff;
+      border-bottom: 1px solid #E0E0E0;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 16px rgba(0,0,0,0.07);
+    }
+    .logo { font-size: 24px; font-weight: 900; color: #111; letter-spacing: -1px; white-space: nowrap; }
+    .logo span { background: #111; color: #E2FF00; border-radius: 6px; padding: 0 5px; }
+    .search-wrap { flex: 1; position: relative; max-width: 560px; margin: 0 auto; }
+    .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .search-wrap input {
+      width: 100%; padding: 10px 16px 10px 38px;
+      background: #F0F0F0; border: 1.5px solid #E0E0E0;
+      border-radius: 50px; font-family: inherit; font-size: 13px; outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: #111; }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .btn-ai {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; background: #111; border: 2px solid #E2FF00;
+      border-radius: 50px; color: #E2FF00; font-weight: 700; font-size: 12px;
+      cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap;
+    }
+    .btn-ai:hover { background: #E2FF00; color: #111; }
+    .btn-upload {
+      padding: 9px 18px; background: #E2FF00; border: none; border-radius: 50px;
+      color: #111; font-weight: 800; font-size: 12px; cursor: pointer;
+      font-family: inherit; box-shadow: 0 2px 12px #E2FF0088;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn-upload:hover { background: #C8E600; transform: scale(1.03); }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      background: #fff; border-bottom: 1px solid #E0E0E0;
+      padding: 0 24px; display: flex; gap: 4px; overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 16px; background: transparent; border: none; border-bottom: 2.5px solid transparent;
+      font-family: inherit; font-size: 12px; font-weight: 700; color: #999;
+      cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .tab.active { color: #111; border-bottom-color: #E2FF00; }
+
+    /* ── LAYOUT ── */
+    .body-wrap { display: flex; padding: 16px; max-width: 1500px; margin: 0 auto; gap: 16px; }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: 260px; flex-shrink: 0; background: #fff; border-radius: 24px;
+      padding: 14px; height: fit-content; position: sticky; top: 103px;
+      border: 1px solid #E0E0E0; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    }
+    .map-placeholder {
+      border-radius: 14px; overflow: hidden; position: relative;
+      height: 170px; background: #E8EEF4; border: 1px solid #E0E0E0;
+    }
+    .map-placeholder svg { position: absolute; }
+    .map-lbl { position: absolute; top: 6px; left: 8px; font-size: 9px; color: #555; font-weight: 700; }
+    .map-zoom { position: absolute; bottom: 6px; right: 8px; display: flex; gap: 4px; }
+    .map-zoom button {
+      background: #fff; border: 1px solid #E0E0E0; color: #111;
+      width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .filter-section { margin-top: 14px; }
+    .filter-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .filter-icon {
+      width: 26px; height: 26px; background: #E2FF00; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .filter-title span { font-weight: 700; font-size: 13px; }
+    .divider { height: 1px; background: #E0E0E0; margin: 12px 0; }
+    .inp {
+      width: 100%; padding: 8px 12px; background: #F0F0F0;
+      border: 1px solid #E0E0E0; border-radius: 10px; font-family: inherit;
+      font-size: 12px; outline: none; color: #111;
+    }
+    .inp:focus { border-color: #111; }
+    .btn-sede {
+      width: 100%; padding: 7px 12px; background: #111; border: none;
+      border-radius: 10px; color: #E2FF00; font-weight: 800; font-size: 11px;
+      cursor: pointer; margin-bottom: 8px; font-family: inherit;
+    }
+    .km-btns { display: flex; gap: 4px; margin-top: 8px; }
+    .km-btn {
+      flex: 1; padding: 5px 0; background: #F0F0F0; border: 1px solid #E0E0E0;
+      border-radius: 8px; color: #555; font-size: 11px; cursor: pointer;
+      font-family: inherit; font-weight: 600;
+    }
+    /* Range slider */
+    .range-labels { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 6px; }
+    .range-badge { background: #E2FF00; border-radius: 6px; padding: 1px 7px; font-weight: 700; color: #111; }
+    .range-track { position: relative; height: 20px; display: flex; align-items: center; }
+    .range-bar { width: 100%; height: 4px; background: #E0E0E0; border-radius: 2px; position: relative; }
+    .range-fill { position: absolute; height: 100%; background: #E2FF00; border-radius: 2px; left: 4%; right: 40%; }
+    input[type=range] { -webkit-appearance: none; appearance: none; position: absolute; width: 100%; opacity: 0; cursor: pointer; height: 20px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #111; border: 2.5px solid #E2FF00; border-radius: 50%; cursor: pointer; }
+    .star-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    .star-row input { width: 13px; height: 13px; accent-color: #111; }
+    .stars-sm { display: flex; gap: 2px; }
+    .muted-sm { font-size: 10px; color: #999; }
+    .btn-filter {
+      width: 100%; padding: 10px; background: #111; border: none;
+      border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 12px;
+      cursor: pointer; font-family: inherit; margin-top: 4px; transition: background .2s;
+    }
+    .btn-filter:hover { background: #333; }
+
+    /* ── FEED ── */
+    main { flex: 1; min-width: 0; }
+    .ai-banner {
+      background: #111; border-radius: 16px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+      cursor: pointer; border: 1.5px solid rgba(226,255,0,0.15);
+      transition: border-color .2s;
+    }
+    .ai-banner:hover { border-color: #E2FF00; }
+    .ai-icon { width: 44px; height: 44px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .ai-banner-arrow { margin-left: auto; color: #E2FF00; font-size: 20px; }
+    .feed-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .feed-count { font-size: 12px; color: #999; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 13px; }
+
+    /* ── CARD ── */
+    .card {
+      background: #fff; border-radius: 20px; overflow: hidden;
+      border: 1px solid #E0E0E0; cursor: pointer;
+      transition: transform .2s, box-shadow .2s; position: relative;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; }
+    .card-user { display: flex; align-items: center; gap: 8px; }
+    .card-username { font-size: 11px; font-weight: 600; }
+    .card-img { aspect-ratio: 4/3; overflow: hidden; position: relative; background: #F0F0F0; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; display: block; }
+    .card-img img:hover { transform: scale(1.06); }
+    .service-label {
+      position: absolute; top: 52px; left: 12px; z-index: 3;
+      background: #111; color: #E2FF00; font-size: 10px; font-weight: 800;
+      border-radius: 20px; padding: 3px 10px; letter-spacing: .5px;
+    }
+    .card-badge-emoji {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(255,255,255,0.92); border-radius: 12px;
+      padding: 4px 10px; font-size: 18px; backdrop-filter: blur(4px);
+    }
+    .card-body { padding: 10px 12px 12px; }
+    .card-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-category { font-size: 10px; font-weight: 600; color: #3B82F6; margin-bottom: 4px; }
+    .stars { display: flex; gap: 2px; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .card-location { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #999; }
+    .price-badge { background: #E2FF00; border-radius: 8px; padding: 3px 9px; font-weight: 800; font-size: 11px; color: #111; box-shadow: 0 2px 8px rgba(226,255,0,0.4); }
+    .card-saving { margin-top: 4px; font-size: 10px; color: #999; }
+    .card-actions { display: flex; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E0E0E0; }
+    .action-btn {
+      background: none; border: none; cursor: pointer; display: flex;
+      align-items: center; gap: 5px; color: #999; font-size: 11px;
+      font-family: inherit; padding: 0; transition: color .15s;
+    }
+    .action-btn:hover { color: #555; }
+    .save-btn { background: none; border: none; cursor: pointer; padding: 4px; }
+
+    /* ── CHAT BUBBLE ── */
+    .chat-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 200; }
+    .chat-panel { background: #fff; border: 1px solid #E0E0E0; border-radius: 16px; width: 275px; padding: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .chat-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .chat-panel-header span { font-weight: 700; font-size: 13px; }
+    .chat-close { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; }
+    .chat-info { background: #F0F0F0; border-radius: 10px; padding: 12px; font-size: 12px; color: #999; text-align: center; }
+    .chat-input { width: 100%; margin-top: 10px; padding: 8px 12px; background: #F0F0F0; border: 1px solid #E0E0E0; border-radius: 10px; font-family: inherit; font-size: 12px; outline: none; }
+    .chat-bubble-btn {
+      width: 54px; height: 54px; background: #111; border-radius: 50%;
+      border: 3px solid #E2FF00; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2); position: relative; transition: transform .2s;
+    }
+    .chat-bubble-btn:hover { transform: scale(1.1); }
+    .chat-notif { position: absolute; top: -4px; right: -4px; width: 17px; height: 17px; background: #ef4444; border-radius: 50%; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid #F5F5F5; }
+    .chat-label { font-size: 10px; color: #999; font-weight: 600; }
+
+    /* ── AI MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; }
+    .ai-modal { background: #fff; border-radius: 28px; width: 520px; max-width: 95vw; height: 82vh; display: flex; flex-direction: column; box-shadow: 0 32px 100px rgba(0,0,0,0.25); overflow: hidden; }
+    .ai-modal-header { background: #111; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    .ai-modal-icon { width: 40px; height: 40px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .ai-modal-title { font-weight: 800; font-size: 15px; color: #E2FF00; }
+    .ai-modal-sub { font-size: 11px; color: #888; }
+    .ai-modal-close { margin-left: auto; background: none; border: none; color: #666; cursor: pointer; font-size: 22px; line-height: 1; }
+    .ai-quick-chips { padding: 12px 16px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: #F0F0F0; border: 1px solid #E0E0E0; color: #555;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .chip:hover { background: #E2FF00; color: #111; border-color: #E2FF00; }
+    .ai-messages { flex: 1; overflow-y: auto; padding: 16px; }
+    .msg-row { display: flex; margin-bottom: 12px; }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-bot-icon { width: 28px; height: 28px; background: #E2FF00; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+    .msg-bubble {
+      max-width: 80%; padding: 10px 14px; border-radius: 16px;
+      font-size: 13px; line-height: 1.5;
+    }
+    .msg-bubble.bot { background: #F0F0F0; color: #111; border-bottom-left-radius: 4px; }
+    .msg-bubble.user { background: #111; color: #E2FF00; border-bottom-right-radius: 4px; }
+    .ai-input-row { padding: 12px 16px 16px; border-top: 1px solid #E0E0E0; display: flex; gap: 8px; }
+    .ai-text-input {
+      flex: 1; padding: 11px 14px; background: #F0F0F0; border: 1.5px solid #E0E0E0;
+      border-radius: 12px; font-family: inherit; font-size: 13px; outline: none; color: #111;
+    }
+    .ai-text-input:focus { border-color: #111; }
+    .ai-send {
+      width: 44px; height: 44px; background: #111; border: none; border-radius: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    .ai-send:hover { background: #333; }
+    .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; display: inline-block; animation: bounce 1s infinite; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    /* ── UPLOAD MODAL ── */
+    .upload-modal { background: #fff; border-radius: 24px; padding: 28px; width: 400px; max-width: 90vw; box-shadow: 0 24px 80px rgba(0,0,0,0.2); }
+    .upload-title { font-weight: 800; font-size: 18px; margin-bottom: 4px; }
+    .upload-sub { color: #999; font-size: 12px; margin-bottom: 16px; }
+    .type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+    .type-btn { flex: 1; padding: 8px; border-radius: 10px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .type-btn.active { background: #111; border: 1px solid #111; color: #E2FF00; }
+    .type-btn.inactive { background: #F0F0F0; border: 1px solid #E0E0E0; color: #555; }
+    .field-lbl { font-size: 11px; font-weight: 700; color: #555; display: block; margin-bottom: 4px; }
+    .field-inp { width: 100%; padding: 9px 12px; background: #F0F0F0; border: 1.5px solid #E0E0E0; border-radius: 10px; font-family: inherit; font-size: 12px; outline: none; color: #111; margin-bottom: 12px; }
+    .field-inp:focus { border-color: #111; }
+    .upload-area { border: 2px dashed #E0E0E0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #F0F0F0; margin-bottom: 14px; }
+    .btn-publish { width: 100%; padding: 11px; background: #111; border: none; border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .btn-publish:hover { background: #333; }
+
+    /* ── EMPTY ── */
+    .empty { text-align: center; padding: 80px 0; color: #999; }
+    .empty .icon { font-size: 48px; }
+    .empty p { margin-top: 12px; font-size: 16px; }
+
+    /* ── HIDDEN ── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Equip<span>Ya</span></div>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input id="searchInput" type="text" placeholder="Buscar herramientas, servicios, zonas..." oninput="renderFeed()"/>
+  </div>
+  <div class="header-right">
+    <button class="btn-ai" onclick="openAI()">🤖 Asistente IA</button>
+    <button class="btn-upload" onclick="openUpload()">+ Subir</button>
+    <div class="avatar" style="background:#3B82F6">YO</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs" id="tabs"></div>
+
+<!-- BODY -->
+<div class="body-wrap">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <!-- Map -->
+    <div class="map-placeholder">
+      <svg width="100%" height="100%">
+        <line x1="0" y1="30" x2="100%" y2="30" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="0" y1="60" x2="100%" y2="60" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="0" y1="90" x2="100%" y2="90" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="0" y1="120" x2="100%" y2="120" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="0" y1="150" x2="100%" y2="150" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="30" y1="0" x2="30" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="60" y1="0" x2="60" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="90" y1="0" x2="90" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="120" y1="0" x2="120" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="150" y1="0" x2="150" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="180" y1="0" x2="180" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <line x1="210" y1="0" x2="210" y2="100%" stroke="#CBD5E1" stroke-width="0.6"/>
+        <path d="M0,90 Q60,80 120,95 Q180,110 260,85" stroke="#fff" stroke-width="6" fill="none"/>
+        <path d="M30,0 Q45,60 40,170" stroke="#fff" stroke-width="4" fill="none"/>
+        <path d="M80,0 Q90,90 85,170" stroke="#fff" stroke-width="3" fill="none"/>
+        <path d="M0,130 Q130,120 260,135" stroke="#fff" stroke-width="3" fill="none"/>
+        <rect x="100" y="40" width="50" height="35" rx="4" fill="#C8E6C9" opacity="0.9"/>
+        <!-- Pins -->
+        <text x="105" y="62" font-size="14">📍</text>
+        <text x="45" y="58" font-size="14">📍</text>
+        <text x="130" y="80" font-size="12">🔵</text>
+        <text x="75" y="95" font-size="14">📍</text>
+        <text x="125" y="115" font-size="14">📍</text>
+        <text x="150" y="52" font-size="12">🔵</text>
+      </svg>
+      <div class="map-lbl">Buenos Aires</div>
+      <div class="map-zoom">
+        <button>+</button>
+        <button>−</button>
+      </div>
+    </div>
+
+    <!-- Fechas -->
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <span>Fechas</span>
+      </div>
+      <input type="date" class="inp"/>
+    </div>
+    <div class="divider"></div>
+
+    <!-- Zona -->
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5">
+            <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+            <line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+          </svg>
+        </div>
+        <span>Zona</span>
+      </div>
+      <button class="btn-sede">📍 Sede Facultad</button>
+      <input type="text" class="inp" placeholder="Buscar ubicación..."/>
+      <div class="km-btns">
+        <button class="km-btn">2 km</button>
+        <button class="km-btn">5 km</button>
+        <button class="km-btn">10 km</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <!-- Precio -->
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+        <span>Precio</span>
+      </div>
+      <div class="range-labels">
+        <span class="range-badge">$2.000</span>
+        <span class="range-badge">$30.000</span>
+      </div>
+      <div class="range-track">
+        <div class="range-bar"><div class="range-fill"></div></div>
+        <input type="range" min="0" max="50000" value="2000"/>
+        <input type="range" min="0" max="50000" value="30000"/>
+      </div>
+      <select class="inp" style="margin-top:8px;cursor:pointer;">
+        <option>De más barato a más caro</option>
+        <option>De más caro a más barato</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+
+    <!-- Valoración -->
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#111">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+          </svg>
+        </div>
+        <span>Valoración</span>
+      </div>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s5"></div> <span class="muted-sm">y más</span></label>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s4"></div> <span class="muted-sm">y más</span></label>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s3"></div> <span class="muted-sm">y más</span></label>
+    </div>
+
+    <button class="btn-filter">Aplicar filtros</button>
+  </aside>
+
+  <!-- FEED -->
+  <main>
+    <div class="ai-banner" onclick="openAI()">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div style="font-weight:800;font-size:14px;color:#E2FF00">¿No sabés qué herramientas necesitás?</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">Preguntale a nuestro asistente IA y te dice el paso a paso de tu proyecto ✨</div>
+      </div>
+      <div class="ai-banner-arrow">→</div>
+    </div>
+    <div class="feed-meta">
+      <span class="feed-count" id="feedCount">16 resultados</span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty hidden" id="emptyState">
+      <div class="icon">🔍</div>
+      <p id="emptyMsg">No encontramos resultados</p>
+    </div>
+  </main>
+</div>
+
+<!-- CHAT BUBBLE -->
+<div class="chat-wrap">
+  <div class="chat-panel hidden" id="chatPanel">
+    <div class="chat-panel-header">
+      <span>Chat Directo</span>
+      <button class="chat-close" onclick="toggleChat()">×</button>
+    </div>
+    <div class="chat-info">Conectate con el dueño directamente 💬</div>
+    <input class="chat-input" placeholder="Escribe un mensaje..."/>
+  </div>
+  <button class="chat-bubble-btn" onclick="toggleChat()">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#E2FF00" stroke-width="2.5">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+    <div class="chat-notif">1</div>
+  </button>
+  <span class="chat-label">Chat Directo</span>
+</div>
+
+<!-- AI MODAL -->
+<div class="modal-overlay hidden" id="aiModal" onclick="closeAI(event)">
+  <div class="ai-modal" onclick="event.stopPropagation()">
+    <div class="ai-modal-header">
+      <div class="ai-modal-icon">🤖</div>
+      <div>
+        <div class="ai-modal-title">Asistente EquipYa</div>
+        <div class="ai-modal-sub">Powered by IA · Te ayuda a construir</div>
+      </div>
+      <button class="ai-modal-close" onclick="document.getElementById('aiModal').classList.add('hidden')">×</button>
+    </div>
+    <div class="ai-quick-chips" id="quickChips">
+      <button class="chip" onclick="sendAI('¿Qué necesito para armar un placard?')">¿Qué necesito para armar un placard?</button>
+      <button class="chip" onclick="sendAI('Cómo instalo un piso flotante')">Cómo instalo un piso flotante</button>
+      <button class="chip" onclick="sendAI('Herramientas para colgar muebles')">Herramientas para colgar muebles</button>
+      <button class="chip" onclick="sendAI('Quiero pintar una habitación')">Quiero pintar una habitación</button>
+    </div>
+    <div class="ai-messages" id="aiMessages">
+      <div class="msg-row">
+        <div class="msg-bot-icon">🤖</div>
+        <div class="msg-bubble bot">¡Hola! Soy tu asistente EquipYa 🛠️<br><br>Preguntame qué vas a construir, reparar o instalar y te digo exactamente qué herramientas necesitás y el paso a paso. ¿Con qué empezamos?</div>
+      </div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-text-input" id="aiInput" placeholder="Ej: Quiero armar una biblioteca de madera..." onkeydown="if(event.key==='Enter') sendAI()"/>
+      <button class="ai-send" onclick="sendAI()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E2FF00" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay hidden" id="uploadModal" onclick="closeUpload(event)">
+  <div class="upload-modal" onclick="event.stopPropagation()">
+    <div class="upload-title">Subir publicación</div>
+    <div class="upload-sub">Producto o servicio para ofrecer</div>
+    <div class="type-btns">
+      <button class="type-btn active" id="btnProd" onclick="setType('Producto')">Producto</button>
+      <button class="type-btn inactive" id="btnServ" onclick="setType('Servicio')">Servicio</button>
+    </div>
+    <label class="field-lbl">Nombre</label>
+    <input class="field-inp" placeholder="Ej: Taladro Bosch / Electricista"/>
+    <label class="field-lbl">Precio</label>
+    <input class="field-inp" placeholder="$0.000"/>
+    <label class="field-lbl">Ubicación</label>
+    <input class="field-inp" placeholder="Barrio, Ciudad"/>
+    <div class="upload-area">
+      <div style="font-size:24px">📷</div>
+      <div style="font-size:11px;color:#999;margin-top:4px">Subir fotos</div>
+    </div>
+    <button class="btn-publish" onclick="document.getElementById('uploadModal').classList.add('hidden')">Publicar</button>
+  </div>
+</div>
+
+<script>
+const ACCENT = "#E2FF00";
+const COLORS = ["#3B82F6","#8B5CF6","#EC4899","#F59E0B","#10B981","#06B6D4","#EF4444"];
+
+const products = [
+  { id:1,  type:"product", user:"carlos_r",  verified:true,  name:"Cámara Sony Alpha a7 III",     rating:4, location:"Palermo, CABA",   price:15000, saved:false, emoji:"📷",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=CAMARA+SONY" },
+  { id:2,  type:"product", user:"martin_b",  verified:true,  name:"Motosierra Stihl MS 180",      rating:4, location:"Vicente López",    price:8500,  saved:false, emoji:"🪚",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=MOTOSIERRA+STIHL" },
+  { id:3,  type:"product", user:"lucia_v",   verified:true,  name:"Compresor de Aire 50L",        rating:4, location:"Palermo, CABA",   price:7000,  saved:true,  emoji:"💨",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=COMPRESOR+AIRE" },
+  { id:4,  type:"product", user:"pablo_f",   verified:true,  name:"Taladro Percutor Bosch",       rating:5, location:"Belgrano, CABA",  price:4500,  saved:false, emoji:"🔩",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=TALADRO+BOSCH" },
+  { id:5,  type:"product", user:"ana_m",     verified:true,  name:"Amoladora Angular Makita 9in", rating:5, location:"Palermo, CABA",   price:3800,  saved:false, emoji:"⚙️",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=AMOLADORA+MAKITA" },
+  { id:6,  type:"product", user:"diego_l",   verified:true,  name:"Cámara Canon EOS R5",          rating:3, location:"Palermo, CABA",   price:22000, saved:true,  emoji:"🎥",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=CAMARA+CANON" },
+  { id:7,  type:"product", user:"sofia_p",   verified:true,  name:"Drone DJI Mini 3 Pro",         rating:4, location:"San Telmo, CABA", price:18000, saved:false, emoji:"🚁",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=DRONE+DJI" },
+  { id:8,  type:"product", user:"jorge_k",   verified:false, name:"Generador Eléctrico 5KW",      rating:4, location:"La Boca, CABA",   price:12000, saved:false, emoji:"⚡",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=GENERADOR+5KW" },
+  { id:9,  type:"product", user:"vale_r",    verified:true,  name:"Sierra Circular DeWalt 7¼",    rating:5, location:"Recoleta, CABA",  price:5500,  saved:false, emoji:"🪛",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=SIERRA+DEWALT" },
+  { id:10, type:"product", user:"rami_g",    verified:true,  name:"Nivel Láser Bosch GLL3-80",    rating:5, location:"Caballito, CABA", price:3200,  saved:false, emoji:"📐",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=NIVEL+LASER" },
+];
+
+const services = [
+  { id:101, type:"service", user:"electro_fer",  verified:true,  name:"Electricista Matriculado",   category:"Electricidad", rating:5, location:"CABA y GBA",       price:8000,  saved:false, badge:"⚡",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=ELECTRICISTA" },
+  { id:102, type:"service", user:"plomero_luis", verified:true,  name:"Plomería y Desagote",        category:"Plomería",     rating:4, location:"Palermo/Belgrano", price:6500,  saved:false, badge:"🔧",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=PLOMERIA" },
+  { id:103, type:"service", user:"fibra_ok",     verified:true,  name:"Instalación Fibra Óptica",   category:"Conectividad", rating:5, location:"Todo CABA",        price:5000,  saved:true,  badge:"📡",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=FIBRA+OPTICA" },
+  { id:104, type:"service", user:"pintu_pro",    verified:false, name:"Pintura Interior/Exterior",  category:"Pintura",      rating:4, location:"Zona Norte GBA",   price:9000,  saved:false, badge:"🎨",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=PINTURA" },
+  { id:105, type:"service", user:"gas_mati",     verified:true,  name:"Gasista Matriculado",        category:"Gas",          rating:5, location:"CABA",             price:7500,  saved:false, badge:"🔥",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=GASISTA" },
+  { id:106, type:"service", user:"albanil_jose", verified:true,  name:"Albañilería y Reparaciones", category:"Construcción", rating:4, location:"GBA Oeste",        price:11000, saved:false, badge:"🏗️",
+    image:"https://placehold.co/600x400/111111/E2FF00?text=ALBANILERIA" },
+];
+
+const allItems = [...products, ...services];
+const TABS = ["Todo","Productos","Servicios","Cámaras","Herramientas","Electricidad","Plomería"];
+let activeTab = "Todo";
+const savedSet = new Set(allItems.filter(i=>i.saved).map(i=>i.id));
+const likedSet = new Set();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init() {
+  // Stars sidebar
+  [5,4,3].forEach(n => {
+    const el = document.getElementById('s'+n);
+    if(el) el.innerHTML = [1,2,3,4,5].map(i =>
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="${i<=n?'#F5B800':'#E0E0E0'}">
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+      </svg>`).join('');
+  });
+  // Tabs
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = TABS.map(t =>
+    `<button class="tab${t===activeTab?' active':''}" onclick="setTab('${t}')">${t}</button>`
+  ).join('');
+  renderFeed();
+}
+
+function setTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => { if(b.textContent===t) b.classList.add('active'); });
+  renderFeed();
+}
+
+function getInitials(name) {
+  return name.split('_').map(p=>p[0]?.toUpperCase()||'').join('').slice(0,2);
+}
+function getColor(name) { return COLORS[name.charCodeAt(0) % COLORS.length]; }
+function starsSVG(rating, size=13) {
+  return [1,2,3,4,5].map(i =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${i<=rating?'#F5B800':'#E0E0E0'}">
+      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+    </svg>`).join('');
+}
+
+function verifiedSVG() {
+  return `<svg width="13" height="13" viewBox="0 0 24 24">
+    <path d="M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806
+      3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438
+      3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806
+      3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138
+      3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946
+      3.42 3.42 0 013.138-3.138z" stroke="#3B82F6" stroke-width="2" fill="none"/>
+    <path d="M9 12l2 2 4-4" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function renderCard(item) {
+  const isService = item.type === 'service';
+  const priceLabel = isService ? '/visita' : '/día';
+  const savings = Math.round(item.price * 12);
+  const isSaved = savedSet.has(item.id);
+  const isLiked = likedSet.has(item.id);
+  return `
+    <div class="card" id="card-${item.id}">
+      ${isService ? `<div class="service-label">SERVICIO</div>` : ''}
+      <div class="card-header">
+        <div class="card-user">
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${getColor(item.user)}">${getInitials(item.user)}</div>
+          <span class="card-username">${item.user}</span>
+          ${item.verified ? verifiedSVG() : ''}
+        </div>
+        <button class="save-btn" onclick="toggleSave(${item.id})" title="Guardar">
+          <svg width="15" height="15" viewBox="0 0 24 24"
+            fill="${isSaved?'#F5B800':'none'}" stroke="${isSaved?'#F5B800':'#999'}" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-img">
+        <img src="${item.image}" alt="${item.name}" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#EFEFEF;font-size:42px;gap:6px&quot;>${item.emoji||'🔧'}</div>'"/>
+        ${isService && item.badge ? `<div class="card-badge-emoji">${item.badge}</div>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-name" title="${item.name}">${item.name}</div>
+        ${isService ? `<div class="card-category">${item.category}</div>` : ''}
+        <div class="stars">${starsSVG(item.rating)}</div>
+        <div class="card-meta">
+          <div class="card-location">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            ${item.location}
+          </div>
+          <div class="price-badge">$${item.price.toLocaleString('es-AR')}${priceLabel}</div>
+        </div>
+        <div class="card-saving">${isService ? 'Presupuesto sin cargo · Responde en &lt;1h' : `Ahorro: $${savings.toLocaleString('es-AR')} vs. compra nuevo`}</div>
+        <div class="card-actions">
+          <button class="action-btn" onclick="toggleLike(${item.id})" style="color:${isLiked?'#F5B800':'#999'}">
+            <svg width="13" height="13" viewBox="0 0 24 24"
+              fill="${isLiked?'#F5B800':'none'}" stroke="${isLiked?'#F5B800':'#999'}" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+            Me gusta
+          </button>
+          <button class="action-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            Comentar
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderFeed() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const filtered = allItems.filter(item => {
+    const matchQ = !q || item.name.toLowerCase().includes(q) || item.location.toLowerCase().includes(q) || (item.category||'').toLowerCase().includes(q);
+    if (!matchQ) return false;
+    if (activeTab==='Todo') return true;
+    if (activeTab==='Productos') return item.type==='product';
+    if (activeTab==='Servicios') return item.type==='service';
+    if (activeTab==='Cámaras') return /cámara|drone/i.test(item.name);
+    if (activeTab==='Herramientas') return /taladro|amoladora|sierra|compresor|motosierra|generador|nivel/i.test(item.name);
+    if (activeTab==='Electricidad') return /electri/i.test(item.category||'');
+    if (activeTab==='Plomería') return /plomer/i.test(item.category||'');
+    return true;
+  });
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('emptyState');
+  const count = document.getElementById('feedCount');
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    document.getElementById('emptyMsg').textContent = q ? `No encontramos resultados para "${q}"` : 'No hay resultados para este filtro';
+    count.textContent = '0 resultados';
+  } else {
+    empty.classList.add('hidden');
+    grid.innerHTML = filtered.map(renderCard).join('');
+    count.textContent = `${filtered.length} resultado${filtered.length!==1?'s':''}`;
+  }
+}
+
+function toggleSave(id) {
+  if (savedSet.has(id)) savedSet.delete(id); else savedSet.add(id);
+  renderFeed();
+}
+function toggleLike(id) {
+  if (likedSet.has(id)) likedSet.delete(id); else likedSet.add(id);
+  renderFeed();
+}
+function toggleChat() {
+  document.getElementById('chatPanel').classList.toggle('hidden');
+}
+function openAI() { document.getElementById('aiModal').classList.remove('hidden'); }
+function closeAI(e) { if(e.target.id==='aiModal') document.getElementById('aiModal').classList.add('hidden'); }
+function openUpload() { document.getElementById('uploadModal').classList.remove('hidden'); }
+function closeUpload(e) { if(e.target.id==='uploadModal') document.getElementById('uploadModal').classList.add('hidden'); }
+function setType(t) {
+  document.getElementById('btnProd').className = 'type-btn ' + (t==='Producto'?'active':'inactive');
+  document.getElementById('btnServ').className = 'type-btn ' + (t==='Servicio'?'active':'inactive');
+}
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+const aiHistory = [];
+
+async function sendAI(preset) {
+  const input = document.getElementById('aiInput');
+  const msg = preset || input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  document.getElementById('quickChips').classList.add('hidden');
+  appendMsg('user', msg);
+  aiHistory.push({ role:'user', content: msg });
+  const typingId = appendTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Sos el asistente de EquipYa, plataforma argentina de alquiler de herramientas y servicios.
+Tu rol: ayudar al usuario con qué herramientas necesita y el paso a paso de su proyecto.
+Respondé en español rioplatense. Sé conciso pero completo. Usá emojis en las listas.
+Formato: primero "🛠️ Herramientas que necesitás:", luego "📋 Paso a paso:", luego "💡 Tip EquipYa:".`,
+        messages: aiHistory
+      })
+    });
+    removeTyping(typingId);
+    const data = await res.json();
+    const reply = data.content?.find(b=>b.type==='text')?.text || 'No pude procesar tu consulta. Intentá de nuevo.';
+    aiHistory.push({ role:'assistant', content: reply });
+    appendMsg('bot', reply);
+  } catch {
+    removeTyping(typingId);
+    appendMsg('bot', 'Ups, hubo un error de conexión. Intentá de nuevo 🙏');
+  }
+}
+
+function appendMsg(role, text) {
+  const container = document.getElementById('aiMessages');
+  const isBot = role === 'bot';
+  const formatted = isBot ? text.replace(/\n/g,'<br>') : text;
+  const html = isBot
+    ? `<div class="msg-row"><div class="msg-bot-icon">🤖</div><div class="msg-bubble bot">${formatted}</div></div>`
+    : `<div class="msg-row user"><div class="msg-bubble user">${formatted}</div></div>`;
+  container.insertAdjacentHTML('beforeend', html);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendTyping() {
+  const id = 'typing-' + Date.now();
+  document.getElementById('aiMessages').insertAdjacentHTML('beforeend',
+    `<div class="msg-row" id="${id}">
+      <div class="msg-bot-icon">🤖</div>
+      <div class="msg-bubble bot">
+        <span class="typing-dot" style="animation-delay:0s"></span>
+        <span class="typing-dot" style="animation-delay:.2s"></span>
+        <span class="typing-dot" style="animation-delay:.4s"></span>
+      </div>
+    </div>`);
+  document.getElementById('aiMessages').scrollTop = 9999;
+  return id;
+}
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+init();
+</script>
+</body>
+</html>
