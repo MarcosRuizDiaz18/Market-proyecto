@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 
 // ── Sub-esquema: Perfil profesional ───────────────────────────────
-// Se activa solo cuando el usuario tiene el rol "profesional".
-// { _id: false } mantiene consistencia con el sub-esquema de vendedor .
 const perfilProfesionalSchema = new mongoose.Schema(
     {
         oficio: {
@@ -26,13 +24,12 @@ const perfilProfesionalSchema = new mongoose.Schema(
             trim: true,
         },
     },
-    { _id: false}
+    { _id: false }
 );
 
-// ── Esquema principal: Usuario────────────────────────────────────
+// ── Esquema principal: Usuario ────────────────────────────────────
 const usuarioSchema = new mongoose.Schema(
     {
-        //identidad
         nombre: {
             type: String,
             required: [true, "El nombre es obligatorio."],
@@ -55,48 +52,54 @@ const usuarioSchema = new mongoose.Schema(
             type: String,
             required: [true, "La contraseña es obligatoria."],
             minlength: [6, "La contraseña debe tener al menos 6 caracteres."],
-            select: false, // nunca se devuelve en queries por seguridad
+            select: false,
         },
+
+        // ── Contacto ──────────────────────────────────────────────
         telefono: {
             type: String,
             trim: true,
         },
+        direccion: {
+            type: String,
+            trim: true,
+        },
 
-        // Coordenadas para el mapa (google maps)
+        // ── Imagen de perfil ──────────────────────────────────────
+        // Almacena la ruta relativa al archivo subido, ej: /uploads/profiles/foto.jpg
+        // Compatible con almacenamiento local y servicios externos en el futuro.
+        fotoPerfil: {
+            type: String,
+            default: null,
+        },
+        avatar: {
+            type: String,
+            default: null,
+        },
+
+        // ── Coordenadas ───────────────────────────────────────────
         latitud: {
             type: Number,
-            required: false, // No es obligatorio por si el usuario no quiere prender el GPS al registrarse
+            required: false,
         },
         longitud: {
             type: Number,
             required: false,
         },
-        // foto de perfil
-        // guarda una URL (externa o local). compatible con Cloudinary,
-        // alamaenamiento local o cualquier servicio futuro sin cambiar el esquema.
-        fotoPerfil: {
-            type: String,
-            default: null,
-        },
 
-        // Roles
-        // Un usuario puede cambiar roles sin crear cuentas nuevas.
-        // por defecto arranca como cliente
+        // ── Roles ─────────────────────────────────────────────────
         roles: {
             type: [String],
             enum: {
                 values: ["cliente", "Dueño", "Profesional"],
-                message: 'El rol "{VALUE}" no es valido.', 
+                message: 'El rol "{VALUE}" no es valido.',
             },
             default: ["cliente"],
         },
 
-        // perfil profesional (solo relevante si roles incluye "profesional")
         perfilProfesional: perfilProfesionalSchema,
 
-        //Reputacion
-        // puntuacion: promedio calculando al crear/actualizar reseñas.
-        // cantidadReseñas: necesario para que el front muestre confiabilidad del promedio.
+        // ── Reputación ────────────────────────────────────────────
         puntuacion: {
             type: Number,
             default: 0,
@@ -105,34 +108,28 @@ const usuarioSchema = new mongoose.Schema(
         },
         cantidadReseñas: {
             type: Number,
-            default:0,
+            default: 0,
         },
 
-        // Control de cuenta
-        // Baja logica: desactivar sin borrar el historial del usuario.
+        // ── Control de cuenta ─────────────────────────────────────
         activo: {
             type: Boolean,
             default: true,
         },
     },
     {
-        //agrega automaticamente createdAt y updetedAt
-        timestamps: {createdAt: "fechaRegistro", updatedAt: "fechaActualizacion"},
+        timestamps: { createdAt: "fechaRegistro", updatedAt: "fechaActualizacion" },
     }
 );
 
-// --- indices ---
-// email ya tiene indice por unique: true.
-//Indexamos roles para filtrar profesionales o dueños eficientemente.
-usuarioSchema.index({ roles: 1});
+// ── Índices ───────────────────────────────────────────────────────
+usuarioSchema.index({ roles: 1 });
 
-// --- validacion condicional ---
-// Si el usuario es profesionalm, el oficio dentro del perfil es obligatorio.
-// Espeja la logica condicional de precioServicio en articulo.js.
+// ── Validación condicional ────────────────────────────────────────
 usuarioSchema.pre("save", async function () {
-  if (this.roles.includes("Profesional") && !this.perfilProfesional?.oficio) {
-    throw new Error("Un usuario profesional debe indicar su oficio en el perfil.");
-  }
+    if (this.roles.includes("Profesional") && !this.perfilProfesional?.oficio) {
+        throw new Error("Un usuario profesional debe indicar su oficio en el perfil.");
+    }
 });
 
 module.exports = mongoose.model("Usuario", usuarioSchema);

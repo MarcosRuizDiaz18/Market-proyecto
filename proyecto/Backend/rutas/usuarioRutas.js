@@ -1,14 +1,58 @@
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
+const multer  = require("multer");
+const path    = require("path");
 
-const { registrarUsuario, obtenerPerfil, login } = require("../controladores/usuarioControlador");
+const { registrarUsuario, obtenerPerfil, login, actualizarPerfil } = require("../controladores/usuarioControlador");
 
-// POST: /api/usuarios/registro
-// Llama a la funcion registraUsuario cuando alguien envia datos a esta URL
+// ── Configuración de Multer para fotos de perfil ──────────────────────────────
+// Destino: carpeta uploads/profiles/ (debe existir en la raíz del backend)
+// Nombre:  timestamp + extensión original para evitar colisiones entre archivos
+const almacenamiento = multer.diskStorage({
+    destination: function (solicitud, archivo, cb) {
+        cb(null, "./uploads/profiles");
+    },
+    filename: function (solicitud, archivo, cb) {
+        const extension    = path.extname(archivo.originalname);
+        const nombreUnico  = `perfil-${Date.now()}${extension}`;
+        cb(null, nombreUnico);
+    },
+});
+
+// Filtro: solo imágenes (jpg, jpeg, png, webp)
+const filtroImagenes = (solicitud, archivo, cb) => {
+    const tiposPermitidos = /jpeg|jpg|png|webp/;
+    const esExtensionValida = tiposPermitidos.test(path.extname(archivo.originalname).toLowerCase());
+    const esMimeValido      = tiposPermitidos.test(archivo.mimetype);
+
+    if (esExtensionValida && esMimeValido) {
+        cb(null, true);
+    } else {
+        cb(new Error("Solo se permiten imágenes (jpg, jpeg, png, webp)."));
+    }
+};
+
+const subirFoto = multer({
+    storage: almacenamiento,
+    limits:  { fileSize: 2 * 1024 * 1024 }, // Límite: 2 MB
+    fileFilter: filtroImagenes,
+});
+
+// ── Rutas ─────────────────────────────────────────────────────────────────────
+
+// POST /api/usuarios/registro
 router.post("/registro", registrarUsuario);
+
+// POST /api/usuarios/login
 router.post("/login", login);
-//GET: /api/usuarios/:id
-//LLama a la funcion obtenerPerfil cuando alguien busca un ID especifico
+
+// PUT /api/usuarios/actualizar/:id
+// Multer procesa el campo "fotoPerfil" del form-data antes de llegar al controlador.
+// Si no se sube imagen, req.file es undefined y el controlador lo omite sin error.
+router.put("/actualizar/:id", subirFoto.single("fotoPerfil"), actualizarPerfil);
+
+// GET /api/usuarios/:id
+// ⚠️  Debe ir ÚLTIMA: /:id capturaría "registro", "login" y "actualizar" si va antes
 router.get("/:id", obtenerPerfil);
 
 module.exports = router;

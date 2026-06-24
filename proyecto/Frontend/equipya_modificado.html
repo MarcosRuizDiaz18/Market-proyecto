@@ -339,6 +339,116 @@
     }
     @keyframes girar { to { transform: rotate(360deg); } }
 
+
+    /* ── MENÚ DESPLEGABLE DE PERFIL ── */
+    .perfil-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      min-width: 190px;
+      padding: 6px;
+      z-index: 1000;
+      border: 1px solid #F0F0F0;
+    }
+    .perfil-menu.show { display: block; }
+    .perfil-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      background: none;
+      border: none;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      cursor: pointer;
+      text-align: left;
+      transition: background .15s;
+    }
+    .perfil-menu-btn:hover { background: #F5F5F5; }
+    .perfil-menu-separador {
+      border: none;
+      border-top: 1px solid #F0F0F0;
+      margin: 4px 6px;
+    }
+    .perfil-menu-btn.danger { color: #EF4444; }
+    .perfil-menu-btn.danger:hover { background: #FEF2F2; }
+
+
+    /* ── MODAL PERFIL ── */
+    .perfil-modal {
+      background: #fff;
+      border-radius: 24px;
+      padding: 32px 28px;
+      width: 460px;
+      max-width: 94vw;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+    }
+    .perfil-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .perfil-modal-titulo {
+      font-weight: 800;
+      font-size: 18px;
+      color: #111;
+    }
+    .perfil-modal-cerrar {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #999;
+      line-height: 1;
+      padding: 0;
+      transition: color .15s;
+    }
+    .perfil-modal-cerrar:hover { color: #111; }
+    .perfil-avatar-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #F8F8F8;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .perfil-avatar-circulo {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #111;
+      border: 2px solid #E2FF00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: #E2FF00;
+      flex-shrink: 0;
+    }
+    .perfil-avatar-info { font-size: 13px; }
+    .perfil-avatar-nombre { font-weight: 700; color: #111; }
+    .perfil-avatar-email  { color: #888; font-size: 11px; margin-top: 2px; }
+    .perfil-fila { display: flex; gap: 10px; }
+    .perfil-fila .campo-grupo { flex: 1; }
+    .perfil-seccion-titulo {
+      font-size: 10px;
+      font-weight: 800;
+      color: #999;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin: 18px 0 10px;
+    }
+
     /* ── HIDDEN ── */
     .hidden { display: none !important; }
   </style>
@@ -357,9 +467,16 @@
   <div class="header-right">
     <button class="btn-ai" onclick="openAI()">🤖 Asistente IA</button>
     <button class="btn-upload" onclick="openUpload()">+ Subir</button>
-    <div class="avatar-contenedor" onclick="abrirModalRegistro()" title="Mi cuenta">
+    <div class="avatar-contenedor" id="avatarContenedor" onclick="toggleAvatarAccion(event)" title="Mi cuenta">
       <img  class="avatar-imagen"   id="avatarImagen"  src="avatar-defecto.jpg" alt="Avatar"/>
       <div  class="avatar-inicial"  id="avatarInicial"></div>
+      <div class="perfil-menu" id="perfilMenu">
+        <button class="perfil-menu-btn" onclick="irAPerfil()">&#128100; Mi Perfil</button>
+        <button class="perfil-menu-btn" onclick="irAMisPublicaciones()">&#128230; Mis Publicaciones</button>
+        <button class="perfil-menu-btn" onclick="irAConfiguracion()">&#9881; Configuraci&#243;n</button>
+        <hr class="perfil-menu-separador"/>
+        <button class="perfil-menu-btn danger" onclick="cerrarSesion()">&#128682; Cerrar Sesi&#243;n</button>
+      </div>
     </div>
   </div>
 </header>
@@ -683,7 +800,7 @@ function renderCard(item) {
         </button>
       </div>
       <div class="card-img">
-        <img src="${imagenReal}" alt="${titulo}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+Imagen'">
+        <img src="${imagenReal}" alt="${titulo}" onerror="this.onerror=null; this.src=''; this.style.display='none';">
       </div>
       <div class="card-body">
         <div class="card-name" title="${titulo}">${titulo}</div>
@@ -887,6 +1004,203 @@ function actualizarAvatar() {
   }
 }
 
+// ── MENÚ DESPLEGABLE DE PERFIL ────────────────────────────────────────────────
+
+// Click en el avatar: abre menú si hay sesión, abre modal de registro si no hay
+function toggleAvatarAccion(evento) {
+  evento.stopPropagation(); // Evita que el listener global lo cierre inmediatamente
+  const haySesion = !!localStorage.getItem('usuarioEquipYa');
+  if (haySesion) {
+    toggleMenuPerfil();
+  } else {
+    abrirModalRegistro();
+  }
+}
+
+function toggleMenuPerfil() {
+  const menu = document.getElementById('perfilMenu');
+  menu.classList.toggle('show');
+}
+
+function cerrarMenuPerfil() {
+  const menu = document.getElementById('perfilMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+// Cierra el menú si el usuario hace clic en cualquier otra parte de la pantalla
+document.addEventListener('click', function(e) {
+  const contenedor = document.getElementById('avatarContenedor');
+  if (contenedor && !contenedor.contains(e.target)) {
+    cerrarMenuPerfil();
+  }
+});
+
+// ─── Acciones del menú ────────────────────────────────────────────────────────
+function irAPerfil() {
+  cerrarMenuPerfil();
+
+  // Cargar datos actuales del localStorage en los inputs
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (raw) {
+      const u = JSON.parse(raw);
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      set('perfil-nombre',    u.nombre);
+      set('perfil-apellido',  u.apellido);
+      set('perfil-email',     u.email);
+      set('perfil-telefono',  u.telefono);
+      set('perfil-direccion', u.direccion);
+
+      // Preview del avatar con inicial
+      const inicial = (u.nombre || '?').charAt(0).toUpperCase();
+      const circulo = document.getElementById('perfil-avatar-circulo');
+      if (circulo) circulo.textContent = inicial;
+      const nombreEl = document.getElementById('perfil-preview-nombre');
+      const emailEl  = document.getElementById('perfil-preview-email');
+      if (nombreEl) nombreEl.textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim();
+      if (emailEl)  emailEl.textContent  = u.email || '';
+    }
+  } catch { /* si el JSON está corrupto, abrimos igual con campos vacíos */ }
+
+  // Limpiar alerta previa
+  const alerta = document.getElementById('perfil-alerta');
+  if (alerta) { alerta.textContent = ''; alerta.className = 'alerta-registro'; }
+
+  document.getElementById('perfilModal').classList.remove('hidden');
+}
+
+function cerrarPerfilModal() {
+  document.getElementById('perfilModal').classList.add('hidden');
+}
+
+// ── Buscador de direcciones con API Georef Argentina ──────────────────────────
+let georefTimeout = null;
+
+async function buscarDireccion() {
+  const input    = document.getElementById('perfil-direccion');
+  const datalist = document.getElementById('sugerencias-direccion');
+  const texto    = input.value.trim();
+
+  if (texto.length < 4) { datalist.innerHTML = ''; return; }
+
+  // Debounce: espera 400ms después de que el usuario deje de escribir
+  clearTimeout(georefTimeout);
+  georefTimeout = setTimeout(async () => {
+    try {
+      const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(texto)}&max=6`;
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      datalist.innerHTML = '';
+      (data.direcciones || []).forEach(d => {
+        const calle     = d.nomenclatura || '';
+        const localidad = d.localidad?.nombre || '';
+        const provincia = d.provincia?.nombre || '';
+        const etiqueta  = [calle, localidad, provincia].filter(Boolean).join(', ');
+        const opcion = document.createElement('option');
+        opcion.value = etiqueta;
+        datalist.appendChild(opcion);
+      });
+    } catch {
+      // Si la API falla no hacemos nada, el campo sigue siendo editable
+    }
+  }, 400);
+}
+
+// ── Guardar perfil en el backend ──────────────────────────────────────────────
+async function guardarPerfil(evento) {
+  evento.preventDefault();
+
+  const alerta = document.getElementById('perfil-alerta');
+  alerta.textContent = '';
+  alerta.className   = 'alerta-registro';
+
+  // Obtener ID del usuario desde localStorage
+  let idUsuario;
+  try {
+    const u = JSON.parse(localStorage.getItem('usuarioEquipYa') || '{}');
+    idUsuario = u._id || u.id;
+  } catch { idUsuario = null; }
+
+  if (!idUsuario) {
+    alerta.textContent = 'No se pudo identificar al usuario. Iniciá sesión nuevamente.';
+    alerta.className   = 'alerta-registro error';
+    return;
+  }
+
+  // Recolectar valores del formulario
+  const payload = {
+    nombre:    document.getElementById('perfil-nombre').value.trim(),
+    apellido:  document.getElementById('perfil-apellido').value.trim(),
+    email:     document.getElementById('perfil-email').value.trim().toLowerCase(),
+    telefono:  document.getElementById('perfil-telefono').value.trim(),
+    direccion: document.getElementById('perfil-direccion').value.trim(),
+  };
+
+  // Activar spinner
+  const boton   = document.getElementById('btnGuardarPerfil');
+  const texto   = document.getElementById('btn-perfil-texto');
+  const spinner = document.getElementById('perfil-spinner');
+  boton.disabled        = true;
+  texto.textContent     = 'Guardando...';
+  spinner.style.display = 'block';
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok) {
+      // Actualizar localStorage con los datos frescos del servidor
+      const raw     = localStorage.getItem('usuarioEquipYa');
+      const sesion  = raw ? JSON.parse(raw) : {};
+      const nuevo   = { ...sesion, ...datos.usuario };
+      localStorage.setItem('usuarioEquipYa', JSON.stringify(nuevo));
+      actualizarAvatar();
+
+      alerta.textContent = '¡Perfil actualizado correctamente!';
+      alerta.className   = 'alerta-registro exito';
+      setTimeout(cerrarPerfilModal, 2000);
+    } else {
+      const msg = datos.detalles ? datos.detalles.join(' · ') : datos.error || 'Error al guardar.';
+      alerta.textContent = msg;
+      alerta.className   = 'alerta-registro error';
+    }
+  } catch (errorRed) {
+    console.error('Error de red al guardar perfil:', errorRed);
+    alerta.textContent = 'No se pudo conectar con el servidor.';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    boton.disabled        = false;
+    texto.textContent     = 'Guardar cambios';
+    spinner.style.display = 'none';
+  }
+}
+
+function irAMisPublicaciones() {
+  cerrarMenuPerfil();
+  // TODO: filtrar el feed por publicaciones del usuario logueado
+  alert('Sección "Mis Publicaciones" próximamente.');
+}
+
+function irAConfiguracion() {
+  cerrarMenuPerfil();
+  // TODO: navegar a la vista de configuración
+  alert('Sección "Configuración" próximamente.');
+}
+
+// Borra la sesión, resetea el avatar y recarga la página
+function cerrarSesion() {
+  localStorage.removeItem('usuarioEquipYa');
+  actualizarAvatar();
+  cerrarMenuPerfil();
+  location.reload();
+}
+
 // ── MODAL REGISTRO ────────────────────────────────────────────────────────────
 const URL_BACKEND = 'http://localhost:3000';
 
@@ -898,6 +1212,16 @@ function abrirModalRegistro() {
 
 function cerrarModalRegistro() {
   document.getElementById('registroModal').classList.add('hidden');
+}
+
+function abrirModalLogin() {
+  cerrarModalRegistro();
+  document.getElementById('loginModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('log-email').focus(), 100);
+}
+
+function cerrarModalLogin() {
+  document.getElementById('loginModal').classList.add('hidden');
 }
 
 function cerrarRegistro(evento) {
@@ -1048,6 +1372,104 @@ if (formPublicar) {
   });
 }
 
+// ── LOGIN: envío al backend ───────────────────────────────────────────────────
+async function enviarLogin() {
+  // Limpiar estado visual previo
+  ['log-email', 'log-contraseña'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('error-input');
+  });
+  const alerta = document.getElementById('log-alerta');
+  alerta.textContent = '';
+  alerta.className   = 'alerta-registro';
+
+  const email       = document.getElementById('log-email').value.trim().toLowerCase();
+  const contraseña = document.getElementById('log-contraseña').value;
+
+  // Validación mínima cliente
+  if (!email) {
+    document.getElementById('log-email').classList.add('error-input');
+    document.getElementById('log-email').focus();
+    alerta.textContent = 'El email es obligatorio.';
+    alerta.className   = 'alerta-registro error';
+    return;
+  }
+  if (!contraseña) {
+    document.getElementById('log-contraseña').classList.add('error-input');
+    document.getElementById('log-contraseña').focus();
+    alerta.textContent = 'La contraseña es obligatoria.';
+    alerta.className   = 'alerta-registro error';
+    return;
+  }
+
+  // Activar spinner y bloquear botón
+  const boton   = document.getElementById('btnLogin');
+  const texto   = document.getElementById('btn-login-texto');
+  const spinner = document.getElementById('log-spinner');
+  boton.disabled        = true;
+  if (texto)   texto.textContent     = 'Ingresando...';
+  if (spinner) spinner.style.display = 'block';
+
+  try {
+    const respuesta = await fetch('http://localhost:3000/api/usuarios/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, contraseña }),
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok) {
+      // ✅ Éxito: guardar sesión y actualizar avatar
+      const sesion = {
+        nombre:   datos.usuario?.nombre   || datos.nombre   || 'Usuario',
+        apellido: datos.usuario?.apellido || datos.apellido || '',
+        email:    datos.usuario?.email    || datos.email    || email,
+        token:    datos.token || null,
+      };
+      localStorage.setItem('usuarioEquipYa', JSON.stringify(sesion));
+      actualizarAvatar();
+
+      alerta.textContent = `¡Bienvenido/a, ${sesion.nombre}!`;
+      alerta.className   = 'alerta-registro exito';
+      document.getElementById('log-email').value       = '';
+      document.getElementById('log-contraseña').value = '';
+      setTimeout(() => {
+        const modal = document.getElementById('loginModal');
+        if (modal) modal.classList.add('hidden');
+      }, 1500);
+
+    } else {
+      // ❌ Error del servidor
+      let mensaje;
+      if (respuesta.status === 404) {
+        mensaje = '¡Usuario no registrado! Chequeá el email o creá una cuenta.';
+        document.getElementById('log-email').classList.add('error-input');
+      } else if (respuesta.status === 401) {
+        mensaje = '¡Datos incorrectos! Verificá tu contraseña.';
+        document.getElementById('log-contraseña').classList.add('error-input');
+        document.getElementById('log-contraseña').value = '';
+      } else {
+        mensaje = datos.error || '¡Datos incorrectos!';
+      }
+      alerta.textContent = mensaje;
+      alerta.className   = 'alerta-registro error';
+    }
+
+  } catch (errorRed) {
+    // ❌ Error de red / servidor caído — SIEMPRE apaga el spinner
+    console.error('Error de red en login:', errorRed);
+    alerta.textContent = 'No se pudo conectar con el servidor. ¿Está corriendo el backend en el puerto 3000?';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    // SIEMPRE restaura el botón, pase lo que pase
+    boton.disabled        = false;
+    if (texto)   texto.textContent     = 'Ingresar';
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+
 init();
 // Ejecutar avatar al cargar
 actualizarAvatar();
@@ -1085,12 +1507,12 @@ actualizarAvatar();
     </button>
     <div class="alerta-registro" id="reg-alerta"></div>
     <div class="registro-pie">
-      ¿Ya tenés cuenta? <a onclick="cerrarModalRegistro()">Iniciá sesión</a>
+      ¿Ya tenés cuenta? <a onclick="abrirModalLogin()">Iniciá sesión</a>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="loginModal" onclick="if(event.target.id==='loginmodal') cerrarModalLogin()">
+<div class="modal-overlay hidden" id="loginModal" onclick="if(event.target.id==='loginModal') cerrarModalLogin()">
   <div class="registro-modal" onclick="event.stopPropagation()">
     <div class="registro-header">
       <div class="registro-logo">Equip<span>Ya</span></div>
@@ -1114,8 +1536,80 @@ actualizarAvatar();
     <div class="alerta-registro" id="log-alerta"></div>
 
     <div class="registro-pie">
-      ¿No tenes cuenta? <a onclick="cerrarModaLogin(); abrirModalRegistro()">Registrate gratis</a>
+      ¿No tenes cuenta? <a onclick="cerrarModalLogin(); abrirModalRegistro()">Registrate gratis</a>
     </div>
+  </div>
+</div>
+
+
+<!-- MODAL PERFIL -->
+<div class="modal-overlay hidden" id="perfilModal" onclick="if(event.target.id==='perfilModal') cerrarPerfilModal()">
+  <div class="perfil-modal" onclick="event.stopPropagation()">
+
+    <!-- Encabezado -->
+    <div class="perfil-modal-header">
+      <div class="perfil-modal-titulo">Mi Perfil</div>
+      <button class="perfil-modal-cerrar" onclick="cerrarPerfilModal()" title="Cerrar">&times;</button>
+    </div>
+
+    <!-- Preview del avatar -->
+    <div class="perfil-avatar-preview">
+      <div class="perfil-avatar-circulo" id="perfil-avatar-circulo">?</div>
+      <div class="perfil-avatar-info">
+        <div class="perfil-avatar-nombre" id="perfil-preview-nombre">—</div>
+        <div class="perfil-avatar-email"  id="perfil-preview-email">—</div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form onsubmit="guardarPerfil(event)">
+
+      <div class="perfil-seccion-titulo">Datos personales</div>
+
+      <div class="perfil-fila">
+        <div class="campo-grupo">
+          <label for="perfil-nombre">Nombre</label>
+          <input type="text" id="perfil-nombre" placeholder="Juan" autocomplete="given-name"/>
+        </div>
+        <div class="campo-grupo">
+          <label for="perfil-apellido">Apellido</label>
+          <input type="text" id="perfil-apellido" placeholder="García" autocomplete="family-name"/>
+        </div>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="perfil-email">Email</label>
+        <input type="email" id="perfil-email" placeholder="juan@ejemplo.com" autocomplete="email"/>
+      </div>
+
+      <div class="perfil-seccion-titulo">Contacto y ubicación</div>
+
+      <div class="campo-grupo">
+        <label for="perfil-telefono">Teléfono</label>
+        <input type="tel" id="perfil-telefono" placeholder="11 3456-7890" autocomplete="tel"/>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="perfil-direccion">Dirección</label>
+        <input
+          type="text"
+          id="perfil-direccion"
+          placeholder="Ej: Av. Mitre 450, Temperley"
+          list="sugerencias-direccion"
+          oninput="buscarDireccion()"
+          autocomplete="off"
+        />
+        <datalist id="sugerencias-direccion"></datalist>
+      </div>
+
+      <button class="btn-registrarse" id="btnGuardarPerfil" type="submit" style="margin-top:8px">
+        <span id="btn-perfil-texto">Guardar cambios</span>
+        <div class="spinner" id="perfil-spinner"></div>
+      </button>
+
+      <div class="alerta-registro" id="perfil-alerta"></div>
+
+    </form>
   </div>
 </div>
 
