@@ -14,28 +14,22 @@ const path =require("path");
 
 const configuracionAlmacenamiento = multer.diskStorage({
   destination: function (solicitud, archivo, cb){
-    cb(null, "uploads/"); //guarda fisicamente en la carpeta uploads
+    cb(null, "uploads/");
   },
   filename: function(solicitud, archivo, cb) {
-    //le pone la fecha exacta por delante para evitar nombres duplicados
     cb(null, Date.now() + path.extname(archivo.originalname));
   }
 });
 
-const upload = multer({ storage: configuracionAlmacenamiento });
-// ┌─────────────────────────────────────────────────────────────┐
-// │  Método  │  Ruta                  │  Acción                 │
-// ├─────────────────────────────────────────────────────────────┤
-// │  GET     │  /api/articulos        │  Lista con filtros      │
-// │  POST    │  /api/articulos        │  Crear artículo         │
-// │  GET     │  /api/articulos/:id    │  Detalle por ID         │
-// │  PUT     │  /api/articulos/:id    │  Actualizar por ID      │
-// │  DELETE  │  /api/articulos/:id    │  Eliminar por ID        │
-// └─────────────────────────────────────────────────────────────┘
+const upload = multer({
+  storage: configuracionAlmacenamiento,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Límite por archivo: 5 MB
+});
 
 enrutador.route("/")
   .get(obtenerArticulos)
-  .post(upload.single("imagen"), crearArticulo);
+  // upload.array("imagenes", 5) → acepta hasta 5 archivos con el campo "imagenes"
+  .post(upload.array("imagenes", 5), crearArticulo);
 
 enrutador.route("/:id")
   .get(obtenerArticuloPorId)

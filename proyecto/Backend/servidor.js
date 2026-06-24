@@ -45,7 +45,7 @@ if (process.env.NODE_ENV !== "produccion") {
   });
 }
 
-// ─── Rutas ─────────────────────────────────────────────────────────────────
+// ─── Rutas de la API ────────────────────────────────────────────────────────
 app.get("/api/estado", (solicitud, respuesta) => {
   respuesta.json({
     mensaje: "¡Servidor funcionando correctamente!",
@@ -60,12 +60,23 @@ app.use("/api/articulos", rutasArticulos);
 const rutasUsuarios = require("./rutas/usuarioRutas");
 app.use("/api/usuarios", rutasUsuarios);
 
-// ─── Middleware de errores 404 ─────────────────────────────────────────────
+const rutasChats = require("./rutas/chatRutas");
+app.use("/api/chats", rutasChats);
+
+// 🌐 1. Servir archivos estáticos de fotos (Arriba de los errores)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 📄 2. Servir la interfaz del Frontend en la raíz (Arriba de los errores)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'equipya_modificado.html'));
+});
+
+// ─── Middleware de errores 404 (SIEMPRE abajo de tus rutas válidas) ─────────
 app.use((solicitud, respuesta) => {
   respuesta.status(404).json({ error: "Ruta no encontrada." });
 });
 
-// ─── Middleware de errores globales ───────────────────────────────────────
+// ─── Middleware de errores globales (Al final de todo) ───────────────────────
 app.use((error, solicitud, respuesta, siguiente) => {
   console.error("🔥 Error interno:", error.message);
   respuesta.status(error.estado || 500).json({
@@ -74,8 +85,8 @@ app.use((error, solicitud, respuesta, siguiente) => {
 });
 
 // ─── Inicio del servidor ───────────────────────────────────────────────────
-app.listen(PUERTO, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PUERTO}`);
+app.listen(PUERTO, '0.0.0.0', () => {
+  console.log(`🚀 Servidor configurado para la red. Escuchando en el puerto ${PUERTO}`);
 });
 
 module.exports = app;

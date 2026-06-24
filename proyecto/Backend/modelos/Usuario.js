@@ -110,6 +110,23 @@ const usuarioSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        // Promedio calculado dinámicamente al recibir una nueva reseña.
+        // Lo usan las tarjetas, el modal de detalle y el filtro del aside.
+        promedioValoracion: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 5,
+        },
+
+        // ── Ubicación preferida ───────────────────────────────────
+        // Fallback cuando el GPS del navegador falla o está bloqueado.
+        // Se usa en crearArticulo para que las publicaciones no queden sin localidad.
+        ubicacionPreferida: {
+            type: String,
+            trim: true,
+            default: null,
+        },
 
         // ── Control de cuenta ─────────────────────────────────────
         activo: {

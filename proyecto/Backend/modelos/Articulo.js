@@ -2,8 +2,14 @@
 const mongoose = require("mongoose");
 
 // ─── Sub-esquema: Vendedor ─────────────────────────────────────────────────
+// { _id: false } evita que Mongoose genere un ObjectId automático.
+// El campo _id aquí es el ID del Usuario que publicó el artículo (String).
 const esquemaVendedor = new mongoose.Schema(
   {
+    _id: {
+      type: String,
+      required: [true, "El ID del vendedor es obligatorio."],
+    },
     nombre: {
       type: String,
       required: [true, "El nombre del vendedor es obligatorio."],
@@ -15,8 +21,14 @@ const esquemaVendedor = new mongoose.Schema(
       max: [5, "La reputación máxima es 5."],
       default: 0,
     },
+    // Ruta relativa de la foto de perfil del vendedor (ej: /uploads/profiles/foto.jpg)
+    // Se copia desde Usuario.avatar al momento de publicar para mostrarlo en las tarjetas.
+    avatar: {
+      type: String,
+      default: null,
+    },
   },
-  { _id: false } // No genera un _id propio para el subdocumento
+  { _id: false } // Previene ObjectId auto-generado; el _id de arriba es explícito
 );
 
 // ─── Esquema principal: Articulo ───────────────────────────────────────────
@@ -55,23 +67,25 @@ const esquemaArticulo = new mongoose.Schema(
       default: "por día",
     },
     // ─── Geolocalización (clave del proyecto) ───────────────────────────
+    // No son required para no bloquear publicaciones cuando el navegador
+    // aún no proporcionó coordenadas; el controlador inyecta defaults seguros.
     partido: {
       type: String,
-      required: [true, "El partido es obligatorio para la búsqueda geográfica."],
       trim: true,
+      default: "Sin especificar",
     },
     localidad: {
       type: String,
-      required: [true, "La localidad es obligatoria para la búsqueda geográfica."],
       trim: true,
+      default: "Sin especificar",
     },
     latitud: {
       type: Number,
-      required: [true, "La latitud es obligatoria para ubicar el articulo en el mapa"]
+      default: 0,
     },
     longitud: {
       type: Number,
-      required: [true, "La longitud es obligatoria para ubicar el articulo en el mapa"]
+      default: 0,
     },
     // ─── Servicio del dueño (híbrido) ───────────────────────────────────
     ofreceServicio: {
@@ -92,6 +106,21 @@ const esquemaArticulo = new mongoose.Schema(
         },
         message: "Si el artículo ofrece servicio, el precio del servicio es obligatorio.",
       },
+    },
+    // ─── Imágenes (hasta 5 fotos del artículo) ──────────────────────────
+    // Array de rutas relativas, ej: ["/uploads/1234.jpg", "/uploads/5678.png"]
+    // Reemplaza el campo imagen (String) para soportar galería/carrusel en el frontend.
+    imagenes: {
+      type: [String],
+      default: [],
+    },
+    tipo: {
+      type: String,
+      enum: {
+        values: ["Producto", "Servicio"],
+        message: "El tipo debe ser 'Producto' o 'Servicio'.",
+      },
+      default: "Producto",
     },
     vendedor: {
       type: esquemaVendedor,

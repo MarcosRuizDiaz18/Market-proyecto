@@ -19,106 +19,144 @@ const manejarErrorMongo = (error, respuesta, siguiente) => {
 const esIdValido = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // ─── POST /api/articulos ───────────────────────────────────────────────────
-// Crea un artículo nuevo
+
 const crearArticulo = async (solicitud, respuesta, siguiente) => {
   try {
-    if (solicitud.file) {
-      solicitud.body.imagen = `/uploads/${solicitud.file.filename}`;
-    }
+    // ── 1. Rutas de imágenes (Multer procesa el array antes de llegar aquí) ─
+    // solicitud.files es el array de hasta 5 archivos enviados con el campo "imagenes"
+    const rutasImagenes = (solicitud.files && solicitud.files.length > 0)
+      ? solicitud.files.map(f => `/uploads/${f.filename}`)
+      : [];
 
-    const idUsuario = solicitud.body.idVendedor;
-    const usuarioPerfil =  await Usuario.findById(idUsuario);
+    // ── 2. Buscar perfil real del vendedor en la base de datos ───────────
+    const idVendedor = solicitud.body.idVendedor ?? null;
+    const usuario = idVendedor ? await Usuario.findById(idVendedor).select(
+      "nombre apellido puntuacion latitud longitud ubicacionPreferida avatar"
+    ) : null;
 
-    if(!usuarioPerfil) {
-      return respuesta.status(404).json({ error: "No se encontro el perfil del usuario." });
-    }
-
-    solicitud.body.titulo = solicitud.body.nombre;
-    solicitud.body.precioBase = solicitud.body.precio;
-    solicitud.body.categoria = "Herramientas";
-
-    solicitud.body.partido = usuarioPerfil.partido || "Sin partido configurado";
-    solicitud.body.localidad = usuarioPerfil.localidad || "Sin localidad mencionada";
-    solicitud.body.latitud = usuarioPerfil.latitud || 0;
-    solicitud.body.longitud = usuarioPerfil.longitud || 0;
-
-    solicitud.body.vendedor = {
-      _id: usuarioPerfil._id,
-      nombre: usuarioPerfil.nombre
+    // ── 3. Construir datos del vendedor con fallback seguro ──────────────
+    const datosVendedor = {
+      _id:        idVendedor ?? "sin_id",
+      nombre:     usuario
+                    ? `${usuario.nombre} ${usuario.apellido ?? ""}`.trim()
+                    : (solicitud.body.nombreVendedor ?? "Usuario"),
+      reputacion: usuario?.puntuacion ?? 0,
+      avatar:     usuario?.avatar ?? null,  // Foto de perfil para mostrar en las tarjetas
     };
 
-    const nuevoArticulo = new Articulo(solicitud.body)
+    // ── 4. Construir el artículo con datos reales + nullish coalescing ───
+    const nuevoArticulo = new Articulo({
+      titulo:         solicitud.body.nombre       ?? solicitud.body.titulo       ?? "Sin título",
+      descripcion:    solicitud.body.descripcion  ?? "",
+      categoria:      solicitud.body.categoria    ?? "Herramientas",
+      precioBase:     Number(solicitud.body.precio ?? solicitud.body.precioBase) || 0,
+      tipoCobro:      solicitud.body.tipoCobro    ?? "por día",
+      // Geolocalización: body del form → perfil del usuario → default neutro
+      partido:        solicitud.body.partido      ?? "Sin especificar",
+      // Cadena de fallback: body del form → ubicacionPreferida del perfil → "Sin especificar"
+      localidad:      solicitud.body.localidad    ?? solicitud.body.ubicacion ?? usuario?.ubicacionPreferida ?? "Sin especificar",
+      latitud:        Number(solicitud.body.latitud)  || usuario?.latitud  || 0,
+      longitud:       Number(solicitud.body.longitud) || usuario?.longitud || 0,
+      // Servicio del dueño
+      ofreceServicio: solicitud.body.ofreceServicio === "true" || solicitud.body.ofreceServicio === true,
+      precioServicio: solicitud.body.precioServicio ? Number(solicitud.body.precioServicio) : null,
+      // Campos de UI
+      imagenes:       rutasImagenes,
+      tipo:           solicitud.body.tipo         ?? "Producto",
+      estado:         "disponible",
+      vendedor:       datosVendedor,
+    });
+
     const articuloGuardado = await nuevoArticulo.save();
 
     respuesta.status(201).json({
-      mensaje: "Articulo creado correctamente!",
+      mensaje: "Artículo creado correctamente.",
       articulo: articuloGuardado,
     });
   } catch (error) {
-    console.log("======DETALLE DEL ERROR======");
-    console.log(solicitud.body);
-    console.log("=============================");
-
     manejarErrorMongo(error, respuesta, siguiente);
   }
 };
-// ─── GET /api/articulos ────────────────────────────────────────────────────
-// Lista artículos con filtros opcionales combinables por query string.
-//
-// Filtros geográficos (exactos, case-insensitive):
-//   ?partido=Lomas de Zamora
-//   ?localidad=Temperley
-//
-// Otros filtros opcionales:
-//   ?categoria=Herramientas
-//   ?estado=disponible
-//
-// Ejemplos combinados:
-//   ?partido=Lomas de Zamora&categoria=Herramientas
-//   ?partido=Quilmes&localidad=Bernal&estado=disponible
+
 const obtenerArticulos = async (solicitud, respuesta, siguiente) => {
   try {
-    // sumammos los filtros del mapa 
     const {
       partido,
       localidad,
       categoria,
       estado,
-      estrellas,
+      estrellas,   // compatibilidad legado (puede venir como 'estrellas')
+      valoracion,  // nuevo param del filtro lateral
       minLat,
       maxLat,
       minLng,
-      maxLng
+      maxLng,
+      idVendedor,
+      precioMin,
+      precioMax,
+      orden,
     } = solicitud.query;
 
     const filtro = {};
 
-    //filtros de ubicacion por texto
+    // ─── TRIPLE BUSQUEDA DE COMPATIBILIDAD DE IDS PARA RADMIN ───
+    if (idVendedor) {
+      const condicionesId = [
+        { "vendedor._id": idVendedor },
+        { "vendedor._id": idVendedor.toString() }
+      ];
+
+      // Si el string es un ObjectId válido de Mongo, sumamos los casters nativos
+      if (mongoose.Types.ObjectId.isValid(idVendedor)) {
+        condicionesId.push({ "vendedor._id": new mongoose.Types.ObjectId(idVendedor) });
+        condicionesId.push({ "vendedor": new mongoose.Types.ObjectId(idVendedor) });
+      }
+
+      filtro.$or = condicionesId;
+    }
+
     if (partido) filtro.partido = { $regex: `^${partido.trim()}$`, $options: "i" };
     if (localidad) filtro.localidad = { $regex: `^${localidad.trim()}$`, $options: "i" };
-
-    //filtros por categoria
     if (categoria) filtro.categoria = { $regex: categoria.trim(), $options: "i" };
 
-    //filtros por estado
-    if (estado) {
+    // Si busca sus propias publicaciones, no le clavamos obligatoriamente el filtro de "disponible"
+    if (!idVendedor) {
+      if (estado) {
+        filtro.estado = estado.trim();
+      } else {
+        filtro.estado = "disponible";
+      }
+    } else if (estado) {
       filtro.estado = estado.trim();
-    } else {
-      filtro.estado = "disponible";
-    }
-    //filtro por estrellas (reputacion)
-    if (estrellas) {
-      filtro["vendedor.reputacion"] = { $gte: Number(estrellas) };
     }
 
-    //NUEVO FILTRO: google maps (busqueda por cuadrante numerico)
-    if (minLat && minLng && maxLng) {
-      filtro.latitud = { $gte: Number(minLat), $lte: Number(maxLat) };
+    // Filtro de valoración: acepta el nuevo param 'valoracion' o el legado 'estrellas'
+    const minValoracion = valoracion || estrellas;
+    if (minValoracion) {
+      filtro["vendedor.promedioValoracion"] = { $gte: Number(minValoracion) };
+    }
+
+    // ── Filtro de bounding box geográfico (viene del frontend ya calculado) ──
+    if (minLat && maxLat && minLng && maxLng) {
+      filtro.latitud  = { $gte: Number(minLat), $lte: Number(maxLat) };
       filtro.longitud = { $gte: Number(minLng), $lte: Number(maxLng) };
     }
-    
-    //ejecutamos la consulta
-    const listaArticulos = await Articulo.find(filtro).sort({ creadoEn: -1 });
+
+    // ── Filtro de rango de precios ─────────────────────────────────────────
+    if (precioMin !== undefined || precioMax !== undefined) {
+      filtro.precioBase = {};
+      if (precioMin !== undefined) filtro.precioBase.$gte = Number(precioMin);
+      if (precioMax !== undefined) filtro.precioBase.$lte = Number(precioMax);
+    }
+
+    // ── Ordenamiento por precio ────────────────────────────────────────────
+    const criterioOrden = orden === 'desc'
+      ? { precioBase: -1 }
+      : orden === 'asc'
+        ? { precioBase: 1 }
+        : { creadoEn: -1 };   // default: más recientes primero
+
+    const listaArticulos = await Articulo.find(filtro).setOptions({ strict: false }).sort(criterioOrden);
 
     respuesta.status(200).json({
       total: listaArticulos.length,
@@ -130,23 +168,18 @@ const obtenerArticulos = async (solicitud, respuesta, siguiente) => {
   }
 };
 
-
 // ─── GET /api/articulos/:id ────────────────────────────────────────────────
-// Devuelve el detalle de un artículo por su ID de MongoDB
 const obtenerArticuloPorId = async (solicitud, respuesta, siguiente) => {
   try {
+    console.log("👀 DETECTIVE BACKEND - idVendedor recibido:", solicitud.query.idVendedor);
     const { id } = solicitud.params;
-
     if (!esIdValido(id)) {
       return respuesta.status(400).json({ error: "El ID proporcionado no tiene un formato válido." });
     }
-
     const articulo = await Articulo.findById(id);
-
     if (!articulo) {
       return respuesta.status(404).json({ error: "No se encontró ningún artículo con ese ID." });
     }
-
     respuesta.status(200).json({ articulo });
   } catch (error) {
     siguiente(error);
@@ -154,22 +187,23 @@ const obtenerArticuloPorId = async (solicitud, respuesta, siguiente) => {
 };
 
 // ─── PUT /api/articulos/:id ────────────────────────────────────────────────
-// Actualiza campos de un artículo existente (precio, descripción, estado, etc.)
-// Solo modifica los campos que se envíen en el body; el resto queda intacto.
 const actualizarArticulo = async (solicitud, respuesta, siguiente) => {
   try {
     const { id } = solicitud.params;
-
     if (!esIdValido(id)) {
       return respuesta.status(400).json({ error: "El ID proporcionado no tiene un formato válido." });
     }
+
+    // Adaptación para cuando envían campos simplificados desde un formulario normal
+    if (solicitud.body.nombre) solicitud.body.titulo = solicitud.body.nombre;
+    if (solicitud.body.precio) solicitud.body.precioBase = solicitud.body.precio;
 
     const articuloActualizado = await Articulo.findByIdAndUpdate(
       id,
       solicitud.body,
       {
-        new: true,           // Devuelve el documento YA actualizado
-        runValidators: true, // Ejecuta las validaciones del esquema al actualizar
+        new: true,
+        runValidators: true,
       }
     );
 
@@ -187,21 +221,16 @@ const actualizarArticulo = async (solicitud, respuesta, siguiente) => {
 };
 
 // ─── DELETE /api/articulos/:id ─────────────────────────────────────────────
-// Elimina un artículo por su ID
 const eliminarArticulo = async (solicitud, respuesta, siguiente) => {
   try {
     const { id } = solicitud.params;
-
     if (!esIdValido(id)) {
       return respuesta.status(400).json({ error: "El ID proporcionado no tiene un formato válido." });
     }
-
     const articuloEliminado = await Articulo.findByIdAndDelete(id);
-
     if (!articuloEliminado) {
       return respuesta.status(404).json({ error: "No se encontró ningún artículo con ese ID." });
     }
-
     respuesta.status(200).json({
       mensaje: "Artículo eliminado correctamente.",
       articulo: articuloEliminado,

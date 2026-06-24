@@ -1,0 +1,4018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EquipYa — Alquiler de herramientas y servicios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       SISTEMA DE TEMAS — variables CSS globales
+       Light mode (default)  ·  Dark mode (.dark-theme en <body>)
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-principal:  #F5F5F5;
+      --bg-header:     #ffffff;
+      --bg-tarjeta:    #ffffff;
+      --bg-input:      #F0F0F0;
+      --bg-aside:      #ffffff;
+      --bg-modal:      #ffffff;
+      --bg-hover:      #F7F7F7;
+      --bg-muted:      #F0F4F8;
+      --borde:         #E0E0E0;
+      --borde-suave:   #EBEBEB;
+      --texto-primario:#111111;
+      --texto-secundario:#555555;
+      --texto-muted:   #999999;
+      --acento:        #E2FF00;
+      --acento-hover:  #C8E600;
+      --sombra:        rgba(0,0,0,0.07);
+      --sombra-media:  rgba(0,0,0,0.12);
+    }
+
+    /* ── Dark Mode ──────────────────────────────────────────────── */
+    body.dark-theme {
+      --bg-principal:  #0f0f0f;
+      --bg-header:     #1a1a1a;
+      --bg-tarjeta:    #1e1e1e;
+      --bg-input:      #2a2a2a;
+      --bg-aside:      #1a1a1a;
+      --bg-modal:      #1e1e1e;
+      --bg-hover:      #252525;
+      --bg-muted:      #1a1a1a;
+      --borde:         #333333;
+      --borde-suave:   #2a2a2a;
+      --texto-primario:#f0f0f0;
+      --texto-secundario:#bbbbbb;
+      --texto-muted:   #777777;
+      --acento:        #E2FF00;
+      --acento-hover:  #c8e600;
+      --sombra:        rgba(0,0,0,0.35);
+      --sombra-media:  rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Montserrat', sans-serif; background: var(--bg-principal); color: var(--texto-primario); transition: background .25s, color .25s; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+
+    /* ── Dark mode: overrides de elementos específicos ─────────────── */
+    body.dark-theme header           { background: var(--bg-header); border-bottom-color: var(--borde); }
+    body.dark-theme aside            { background: var(--bg-aside); border-right-color: var(--borde); }
+    body.dark-theme .card            { background: var(--bg-tarjeta); border-color: var(--borde); }
+    body.dark-theme .inp             { background: var(--bg-input); border-color: var(--borde); color: var(--texto-primario); }
+    body.dark-theme .search-wrap input { background: var(--bg-input); border-color: var(--borde); color: var(--texto-primario); }
+    body.dark-theme .perfil-menu     { background: var(--bg-tarjeta); border-color: var(--borde); }
+    body.dark-theme .perfil-menu-btn { color: var(--texto-primario); }
+    body.dark-theme .perfil-menu-btn:hover { background: var(--bg-hover); }
+    body.dark-theme .tab-btn         { color: var(--texto-muted); }
+    body.dark-theme .tab-btn.active  { color: var(--texto-primario); border-bottom-color: var(--texto-primario); }
+    body.dark-theme .modal-content,
+    body.dark-theme .modal-box       { background: var(--bg-modal); color: var(--texto-primario); }
+    body.dark-theme .modal-backdrop  { background: rgba(0,0,0,0.75); }
+    body.dark-theme .chat-panel      { background: var(--bg-tarjeta); border-color: var(--borde); }
+    body.dark-theme .chat-item:hover { background: var(--bg-hover); }
+    body.dark-theme .msg-bubble.bot  { background: var(--bg-input); color: var(--texto-primario); }
+    body.dark-theme .msg-bubble.user { background: #111; color: var(--acento); }
+    body.dark-theme .filter-section  { background: transparent; }
+    body.dark-theme .divider         { background: var(--borde); }
+    body.dark-theme .range-badge     { background: var(--acento); color: #111; }
+    body.dark-theme ::-webkit-scrollbar-thumb { background: #444; }
+    body.dark-theme .card-name       { color: var(--texto-primario); }
+    body.dark-theme .card-location   { color: var(--texto-muted); }
+    body.dark-theme .muted-sm        { color: var(--texto-muted); }
+    body.dark-theme .btn-filter      { background: var(--acento); color: #111; }
+    body.dark-theme .zona-sugerencias-item:hover,
+    body.dark-theme #zona-sugerencias div:hover { background: var(--bg-hover); }
+    body.dark-theme #zona-sugerencias { background: var(--bg-tarjeta); border-color: var(--borde); }
+    body.dark-theme .detalle-modal   { background: var(--bg-modal); }
+    body.dark-theme .stars-sm::before { color: var(--acento); }
+
+    /* ── HEADER ── */
+    header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 24px; background: var(--bg-tarjeta);
+      border-bottom: 1px solid var(--borde);
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 16px var(--sombra);
+    }
+    .logo { font-size: 24px; font-weight: 900; color: var(--texto-primario); letter-spacing: -1px; white-space: nowrap; }
+    .logo span { background: #111; color: #E2FF00; border-radius: 6px; padding: 0 5px; }
+    .search-wrap { flex: 1; position: relative; max-width: 560px; margin: 0 auto; }
+    .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .search-wrap input {
+      width: 100%; padding: 10px 16px 10px 38px;
+      background: var(--bg-input); border: 1.5px solid #E0E0E0;
+      border-radius: 50px; font-family: inherit; font-size: 13px; outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--texto-primario); }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    /* ── Botón Dark/Light Mode ─────────────────────────── */
+    .btn-tema {
+      background: none; border: 1.5px solid var(--borde);
+      border-radius: 50%; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s, border-color .15s;
+      flex-shrink: 0; padding: 0;
+    }
+    .btn-tema:hover { background: var(--bg-input); border-color: var(--texto-muted); }
+    body.dark-theme .btn-tema { border-color: #444; }
+    body.dark-theme .btn-tema:hover { background: #2a2a2a; }
+    .btn-tema svg { display: block; }
+
+    .btn-ai {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; background: #111; border: 2px solid #E2FF00;
+      border-radius: 50px; color: #E2FF00; font-weight: 700; font-size: 12px;
+      cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap;
+    }
+    .btn-ai:hover { background: #E2FF00; color: var(--texto-primario); }
+    .btn-upload {
+      padding: 9px 18px; background: #E2FF00; border: none; border-radius: 50px;
+      color: var(--texto-primario); font-weight: 800; font-size: 12px; cursor: pointer;
+      font-family: inherit; box-shadow: 0 2px 12px #E2FF0088;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn-upload:hover { background: #C8E600; transform: scale(1.03); }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      background: var(--bg-tarjeta); border-bottom: 1px solid var(--borde);
+      padding: 0 24px; display: flex; gap: 4px; overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 16px; background: transparent; border: none; border-bottom: 2.5px solid transparent;
+      font-family: inherit; font-size: 12px; font-weight: 700; color: var(--texto-muted);
+      cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .tab.active { color: var(--texto-primario); border-bottom-color: #E2FF00; }
+
+    /* ── LAYOUT ── */
+    .body-wrap { display: flex; padding: 16px; max-width: 1500px; margin: 0 auto; gap: 16px; }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: 260px; flex-shrink: 0; background: var(--bg-tarjeta); border-radius: 24px;
+      padding: 14px; height: fit-content; position: sticky; top: 103px;
+      border: 1px solid var(--borde); box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    }
+    #mapa-leaflet {
+      border-radius: 14px; overflow: hidden; position: relative;
+      height: 210px; border: 1px solid var(--borde);
+    }
+    .map-lbl { position: absolute; top: 6px; left: 8px; font-size: 9px; color: var(--texto-secundario); font-weight: 700; }
+    .map-zoom { position: absolute; bottom: 6px; right: 8px; display: flex; gap: 4px; }
+    .map-zoom button {
+      background: var(--bg-tarjeta); border: 1px solid var(--borde); color: var(--texto-primario);
+      width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .filter-section { margin-top: 14px; }
+    .filter-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .filter-icon {
+      width: 26px; height: 26px; background: #E2FF00; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .filter-title span { font-weight: 700; font-size: 13px; }
+    .divider { height: 1px; background: #E0E0E0; margin: 12px 0; }
+    .inp {
+      width: 100%; padding: 8px 12px; background: var(--bg-input);
+      border: 1px solid var(--borde); border-radius: 10px; font-family: inherit;
+      font-size: 12px; outline: none; color: var(--texto-primario);
+    }
+    .inp:focus { border-color: var(--texto-primario); }
+    .btn-sede {
+      width: 100%; padding: 7px 12px; background: #111; border: none;
+      border-radius: 10px; color: #E2FF00; font-weight: 800; font-size: 11px;
+      cursor: pointer; margin-bottom: 8px; font-family: inherit;
+    }
+    .km-btns { display: flex; gap: 4px; margin-top: 8px; }
+    .km-btn {
+      flex: 1; padding: 5px 0; background: var(--bg-input); border: 1px solid var(--borde);
+      border-radius: 8px; color: var(--texto-secundario); font-size: 11px; cursor: pointer;
+      font-family: inherit; font-weight: 600; transition: all .15s;
+    }
+    .km-btn.activo {
+      background: #111; border-color: var(--texto-primario); color: #E2FF00; font-weight: 800;
+    }
+    /* Range slider */
+    .range-labels { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 6px; }
+    .range-badge { background: #E2FF00; border-radius: 6px; padding: 1px 7px; font-weight: 700; color: var(--texto-primario); }
+    .range-track { position: relative; height: 20px; display: flex; align-items: center; }
+    .range-bar { width: 100%; height: 4px; background: #E0E0E0; border-radius: 2px; position: relative; }
+    .range-fill { position: absolute; height: 100%; background: #E2FF00; border-radius: 2px; left: 4%; right: 40%; }
+    input[type=range] { -webkit-appearance: none; appearance: none; position: absolute; width: 100%; opacity: 0; cursor: pointer; height: 20px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #111; border: 2.5px solid #E2FF00; border-radius: 50%; cursor: pointer; }
+    .star-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    .star-row input { width: 13px; height: 13px; accent-color: var(--texto-primario); }
+    .stars-sm { display: flex; gap: 2px; }
+    .muted-sm { font-size: 10px; color: var(--texto-muted); }
+    .btn-filter {
+      width: 100%; padding: 10px; background: #111; border: none;
+      border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 12px;
+      cursor: pointer; font-family: inherit; margin-top: 4px; transition: background .2s;
+    }
+    .btn-filter:hover { background: #333; }
+
+    /* ── FEED ── */
+    main { flex: 1; min-width: 0; }
+    .ai-banner {
+      background: #111; border-radius: 16px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+      cursor: pointer; border: 1.5px solid rgba(226,255,0,0.15);
+      transition: border-color .2s;
+    }
+    .ai-banner:hover { border-color: #E2FF00; }
+    .ai-icon { width: 44px; height: 44px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .ai-banner-arrow { margin-left: auto; color: #E2FF00; font-size: 20px; }
+    .feed-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .feed-count { font-size: 12px; color: var(--texto-muted); font-weight: 500; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 13px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--bg-tarjeta); border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--borde); cursor: pointer;
+      transition: transform .2s, box-shadow .2s; position: relative;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; }
+    .card-user { display: flex; align-items: center; gap: 8px; }
+    .card-username { font-size: 11px; font-weight: 600; }
+    .card-img { aspect-ratio: 4/3; overflow: hidden; position: relative; background: var(--bg-input); }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; display: block; }
+    .card-img img:hover { transform: scale(1.06); }
+    .service-label {
+      position: absolute; top: 52px; left: 12px; z-index: 3;
+      background: #111; color: #E2FF00; font-size: 10px; font-weight: 800;
+      border-radius: 20px; padding: 3px 10px; letter-spacing: .5px;
+    }
+    .card-badge-emoji {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(255,255,255,0.92); border-radius: 12px;
+      padding: 4px 10px; font-size: 18px; backdrop-filter: blur(4px);
+    }
+    .card-body { padding: 10px 12px 12px; }
+    .card-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-category { font-size: 10px; font-weight: 600; color: #3B82F6; margin-bottom: 4px; }
+    .stars { display: flex; gap: 2px; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .card-location { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--texto-muted); }
+    .price-badge { background: #E2FF00; border-radius: 8px; padding: 3px 9px; font-weight: 800; font-size: 11px; color: var(--texto-primario); box-shadow: 0 2px 8px rgba(226,255,0,0.4); }
+    .card-saving { margin-top: 4px; font-size: 10px; color: var(--texto-muted); }
+    .card-actions { display: flex; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde); }
+    .action-btn {
+      background: none; border: none; cursor: pointer; display: flex;
+      align-items: center; gap: 5px; color: var(--texto-muted); font-size: 11px;
+      font-family: inherit; padding: 0; transition: color .15s;
+    }
+    .action-btn:hover { color: var(--texto-secundario); }
+    .save-btn { background: none; border: none; cursor: pointer; padding: 4px; }
+
+    /* ── SECCIÓN MIS PUBLICACIONES (NUEVA) ── */
+    .mis-pub-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: var(--bg-tarjeta); padding: 16px 20px; border-radius: 16px; border: 1px solid var(--borde); }
+    .mis-pub-titulo { font-weight: 800; font-size: 16px; }
+    .btn-volver { padding: 8px 14px; background: #111; border: none; border-radius: 50px; color: #fff; font-weight: 700; font-size: 11px; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+    .btn-volver:hover { opacity: 0.85; }
+    
+    .panel-administracion { background: var(--bg-tarjeta); border-radius: 20px; border: 1px solid var(--borde); overflow: hidden; padding: 10px; }
+    .tabla-pub { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    .tabla-pub th { padding: 12px 14px; background: var(--bg-hover); font-weight: 700; color: var(--texto-secundario); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--borde); }
+    .tabla-pub td { padding: 14px; border-bottom: 1px solid #F0F0F0; vertical-align: middle; }
+    .tabla-pub tr:last-child td { border-bottom: none; }
+    .tabla-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-input); display: block; }
+    .tabla-titulo { font-weight: 700; color: var(--texto-primario); }
+    .tabla-precio { font-weight: 800; color: var(--texto-primario); }
+    .tabla-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .tabla-badge.producto { background: #EFF6FF; color: #1D4ED8; }
+    .tabla-badge.servicio { background: #FDF2F8; color: #B91C1C; }
+    
+    .tabla-acciones { display: flex; gap: 8px; }
+    .btn-accion-edit { padding: 6px 12px; background: var(--bg-input); border: none; border-radius: 8px; color: var(--texto-primario); font-weight: 700; font-size: 11px; cursor: pointer; font-family: inherit; transition: background .15s; }
+    .btn-accion-edit:hover { background: #E2FF00; }
+    .btn-accion-del { padding: 6px 12px; background: #FEF2F2; border: none; border-radius: 8px; color: #EF4444; font-weight: 700; font-size: 11px; cursor: pointer; font-family: inherit; transition: background .15s; }
+    .btn-accion-del:hover { background: #FEE2E2; }
+
+    /* ── BADGE DE NOTIFICACIONES EN AVATAR ── */
+    .avatar-badge {
+      position: absolute;
+      top: -3px; right: -3px;
+      min-width: 17px; height: 17px;
+      background: #EF4444;
+      color: #fff;
+      border-radius: 9px;
+      font-size: 9px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid #fff;
+      padding: 0 3px;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .avatar-badge.oculto { display: none; }
+
+    /* ── AI MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; }
+    .ai-modal { background: var(--bg-tarjeta); border-radius: 28px; width: 520px; max-width: 95vw; height: 82vh; display: flex; flex-direction: column; box-shadow: 0 32px 100px rgba(0,0,0,0.25); overflow: hidden; }
+    .ai-modal-header { background: #111; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    .ai-modal-icon { width: 40px; height: 40px; background: #E2FF00; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .ai-modal-title { font-weight: 800; font-size: 15px; color: #E2FF00; }
+    .ai-modal-sub { font-size: 11px; color: var(--texto-muted); }
+    .ai-modal-close { margin-left: auto; background: none; border: none; color: var(--texto-secundario); cursor: pointer; font-size: 22px; line-height: 1; }
+    .ai-quick-chips { padding: 12px 16px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: var(--bg-input); border: 1px solid var(--borde); color: var(--texto-secundario);
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .chip:hover { background: #E2FF00; color: var(--texto-primario); border-color: #E2FF00; }
+    .ai-messages { flex: 1; overflow-y: auto; padding: 16px; }
+    .msg-row { display: flex; margin-bottom: 12px; }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-bot-icon { width: 28px; height: 28px; background: #E2FF00; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+    .msg-bubble {
+      max-width: 80%; padding: 10px 14px; border-radius: 16px;
+      font-size: 13px; line-height: 1.5;
+    }
+    .msg-bubble.bot { background: var(--bg-input); color: var(--texto-primario); border-bottom-left-radius: 4px; }
+    .msg-bubble.user { background: #111; color: #E2FF00; border-bottom-right-radius: 4px; }
+    .ai-input-row { padding: 12px 16px 16px; border-top: 1px solid var(--borde); display: flex; gap: 8px; }
+    .ai-text-input {
+      flex: 1; padding: 11px 14px; background: var(--bg-input); border: 1.5px solid #E0E0E0;
+      border-radius: 12px; font-family: inherit; font-size: 13px; outline: none; color: var(--texto-primario);
+    }
+    .ai-text-input:focus { border-color: var(--texto-primario); }
+    .ai-send {
+      width: 44px; height: 44px; background: #111; border: none; border-radius: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    .ai-send:hover { background: #333; }
+    .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; display: inline-block; animation: bounce 1s infinite; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    /* ── UPLOAD MODAL ── */
+    .upload-modal { background: var(--bg-tarjeta); border-radius: 24px; padding: 28px; width: 400px; max-width: 90vw; box-shadow: 0 24px 80px rgba(0,0,0,0.2); }
+    .upload-title { font-weight: 800; font-size: 18px; margin-bottom: 4px; }
+    .upload-sub { color: var(--texto-muted); font-size: 12px; margin-bottom: 16px; }
+    .type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+    .type-btn { flex: 1; padding: 8px; border-radius: 10px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .type-btn.active { background: #111; border: 1px solid #111; color: #E2FF00; }
+    .type-btn.inactive { background: var(--bg-input); border: 1px solid var(--borde); color: var(--texto-secundario); }
+    .field-lbl { font-size: 11px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 4px; }
+    .field-inp { width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1.5px solid #E0E0E0; border-radius: 10px; font-family: inherit; font-size: 12px; outline: none; color: var(--texto-primario); margin-bottom: 12px; }
+    .field-inp:focus { border-color: var(--texto-primario); }
+    .upload-area { border: 2px dashed #E0E0E0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: var(--bg-input); margin-bottom: 14px; }
+    .btn-publish { width: 100%; padding: 11px; background: #111; border: none; border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .btn-publish:hover { background: #333; }
+
+    /* ── EMPTY ── */
+    .empty { text-align: center; padding: 80px 0; color: var(--texto-muted); }
+    .empty .icon { font-size: 48px; }
+    .empty p { margin-top: 12px; font-size: 16px; }
+
+    /* ── AVATAR DINÁMICO ── */
+    .avatar-contenedor {
+      position: relative;
+      width: 34px; height: 34px;
+      flex-shrink: 0; cursor: pointer;
+    }
+    .avatar-imagen {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--borde);
+      display: block;
+      transition: border-color .2s;
+    }
+    .avatar-imagen:hover { border-color: #E2FF00; }
+    .avatar-inicial {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: #111;
+      border: 2px solid #E2FF00;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #E2FF00;
+      letter-spacing: 0;
+      transition: background .2s;
+      cursor: pointer;
+    }
+    .avatar-inicial:hover { background: #222; }
+
+    /* ── MODAL REGISTRO ── */
+    .registro-modal {
+      background: var(--bg-tarjeta); border-radius: 24px; padding: 32px 28px;
+      width: 420px; max-width: 92vw;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+    }
+    .registro-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .registro-logo { font-size: 20px; font-weight: 900; color: var(--texto-primario); letter-spacing: -1px; }
+    .registro-logo span { background: #111; color: #E2FF00; border-radius: 5px; padding: 0 4px; }
+    .registro-titulo { font-weight: 800; font-size: 20px; margin-bottom: 4px; }
+    .registro-sub { font-size: 12px; color: var(--texto-muted); margin-bottom: 20px; }
+    .registro-fila { display: flex; gap: 10px; }
+    .registro-fila .campo-grupo { flex: 1; }
+    .campo-grupo { margin-bottom: 14px; }
+    .campo-grupo label { font-size: 11px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 5px; }
+    .campo-grupo input {
+      width: 100%; padding: 10px 12px; background: var(--bg-input);
+      border: 1.5px solid #E0E0E0; border-radius: 10px;
+      font-family: inherit; font-size: 13px; outline: none; color: var(--texto-primario); transition: border-color .2s;
+    }
+    .campo-grupo input:focus { border-color: var(--texto-primario); }
+    .campo-grupo input.error-input { border-color: #EF4444 !important; }
+    .btn-registrarse {
+      width: 100%; padding: 12px; background: #111; border: none;
+      border-radius: 12px; color: #E2FF00; font-weight: 800; font-size: 14px;
+      cursor: pointer; font-family: inherit; margin-top: 4px;
+      transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-registrarse:hover:not(:disabled) { background: #333; }
+    .btn-registrarse:disabled { opacity: 0.6; cursor: not-allowed; }
+    .alerta-registro {
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 12px; font-weight: 600; margin-top: 12px; display: none;
+    }
+    .alerta-registro.exito { background: #DCFCE7; color: #166534; display: block; }
+    .alerta-registro.error  { background: #FEE2E2; color: #991B1B; display: block; }
+    .registro-pie { text-align: center; margin-top: 14px; font-size: 11px; color: var(--texto-muted); }
+    .registro-pie a { color: var(--texto-primario); font-weight: 700; cursor: pointer; text-decoration: underline; }
+    .spinner {
+      width: 16px; height: 16px; border: 2.5px solid rgba(226,255,0,0.3);
+      border-top-color: #E2FF00; border-radius: 50%;
+      animation: girar 0.7s linear infinite; display: none;
+    }
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    /* ── MENÚ DESPLEGABLE DE PERFIL ── */
+    .perfil-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: var(--bg-tarjeta);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      min-width: 190px;
+      padding: 6px;
+      z-index: 1000;
+      border: 1px solid #F0F0F0;
+    }
+    .perfil-menu.show { display: block; }
+    .perfil-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      background: none;
+      border: none;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--texto-primario);
+      cursor: pointer;
+      text-align: left;
+      transition: background .15s;
+    }
+    .perfil-menu-btn:hover { background: var(--bg-principal); }
+    .perfil-menu-separador {
+      border: none;
+      border-top: 1px solid #F0F0F0;
+      margin: 4px 6px;
+    }
+    .perfil-menu-btn.danger { color: #EF4444; }
+    .perfil-menu-btn.danger:hover { background: #FEF2F2; }
+
+    /* ── MODAL PERFIL ── */
+    .perfil-modal {
+      background: var(--bg-tarjeta);
+      border-radius: 24px;
+      padding: 32px 28px;
+      width: 460px;
+      max-width: 94vw;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+    }
+    .perfil-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .perfil-modal-titulo {
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--texto-primario);
+    }
+    .perfil-modal-cerrar {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--texto-muted);
+      line-height: 1;
+      padding: 0;
+      transition: color .15s;
+    }
+    .perfil-modal-cerrar:hover { color: var(--texto-primario); }
+    .perfil-avatar-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-input);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .perfil-avatar-contenedor-imagen {
+      position: relative;
+      width: 52px; height: 52px;
+      flex-shrink: 0;
+    }
+    .perfil-avatar-circulo, .perfil-avatar-img-real {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: #111;
+      border: 2px solid #E2FF00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: #E2FF00;
+      object-fit: cover;
+    }
+    .perfil-avatar-subir-btn {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      width: 20px; height: 20px;
+      background: #111;
+      border: 1.5px solid #E2FF00;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 10px;
+      color: #E2FF00;
+      transition: transform .15s;
+    }
+    .perfil-avatar-subir-btn:hover { transform: scale(1.15); }
+
+    /* ── Avatar grande (solo lectura) en modal "Mi Perfil" ── */
+    #perfilModal .perfil-avatar-contenedor-imagen {
+      width: 110px; height: 110px;
+    }
+    #perfilModal .perfil-avatar-circulo,
+    #perfilModal .perfil-avatar-img-real {
+      width: 110px; height: 110px;
+      font-size: 38px;
+      border-width: 3px;
+    }
+    #perfilModal .perfil-avatar-preview {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .perfil-avatar-info { font-size: 13px; }
+    .perfil-avatar-nombre { font-weight: 700; color: var(--texto-primario); }
+    .perfil-avatar-email  { color: var(--texto-muted); font-size: 11px; margin-top: 2px; }
+    .perfil-fila { display: flex; gap: 10px; }
+    .perfil-fila .campo-grupo { flex: 1; }
+    .perfil-seccion-titulo {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--texto-muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin: 18px 0 10px;
+    }
+
+    /* ── MODAL CONFIGURACIÓN ── */
+    .config-modal {
+      background: var(--bg-tarjeta);
+      border-radius: 24px;
+      padding: 28px;
+      width: 480px;
+      max-width: 94vw;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+    }
+    .config-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .config-header-titulo { font-weight: 800; font-size: 18px; color: var(--texto-primario); }
+    .config-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-input);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+    .config-tab {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--texto-muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .config-tab.active {
+      background: var(--bg-tarjeta);
+      color: var(--texto-primario);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+    .config-section { animation: fadeIn .15s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .zona-peligro-btn {
+      width: 100%; padding: 11px; background: #FEF2F2;
+      border: 1.5px solid #FCA5A5; border-radius: 12px;
+      color: #EF4444; font-weight: 800; font-size: 13px;
+      cursor: pointer; font-family: inherit;
+      transition: background .15s;
+    }
+    .zona-peligro-btn:hover { background: #FEE2E2; }
+    /* Inputs deshabilitados en Mi Perfil (solo lectura) */
+    .campo-grupo input:disabled {
+      background: var(--bg-input);
+      color: var(--texto-muted);
+      cursor: not-allowed;
+      border-color: #EBEBEB;
+    }
+
+    /* ── BOTÓN GPS ── */
+    .btn-gps {
+      padding: 9px 12px;
+      background: #111;
+      border: none;
+      border-radius: 10px;
+      color: #E2FF00;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background .15s, transform .1s;
+      flex-shrink: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+    }
+    .btn-gps:hover  { background: #333; }
+    .btn-gps:active { transform: scale(0.94); }
+    .btn-gps:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .ubicacion-wrap { display: flex; gap: 6px; margin-bottom: 12px; }
+    .ubicacion-wrap .field-inp { margin-bottom: 0; flex: 1; }
+
+    /* ══════════════════════════════════════════════════
+       VISTA CHATS
+    ══════════════════════════════════════════════════ */
+    #view-chats {
+      display: flex;
+      height: calc(100vh - 120px);
+      gap: 0;
+      background: var(--bg-tarjeta);
+      border-radius: 16px;
+      border: 1px solid var(--borde);
+      overflow: hidden;
+    }
+    /* ── Panel izquierdo: lista de conversaciones ── */
+    .chats-sidebar {
+      width: 300px;
+      min-width: 240px;
+      border-right: 1px solid #E8E8E8;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-hover);
+    }
+    .chats-sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid #E8E8E8;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chats-sidebar-titulo {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--texto-primario);
+    }
+    .chats-filtros {
+      display: flex;
+      gap: 6px;
+    }
+    .chat-filtro-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 20px;
+      border: 1.5px solid #E0E0E0;
+      background: var(--bg-tarjeta);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--texto-secundario);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .chat-filtro-btn.activo {
+      background: #111;
+      color: #E2FF00;
+      border-color: var(--texto-primario);
+    }
+    .chats-lista {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .conv-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #F0F0F0;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .conv-item:hover { background: var(--bg-input); }
+    .conv-item.activa { background: var(--bg-principal); border-left: 3px solid #111; }
+    .conv-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    .conv-avatar-ini {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: #fff;
+    }
+    .conv-info { flex: 1; min-width: 0; }
+    .conv-nombre {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--texto-primario);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conv-preview {
+      font-size: 11px;
+      color: var(--texto-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .conv-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .conv-hora {
+      font-size: 10px;
+      color: #AAA;
+    }
+    .conv-badge {
+      background: #EF4444;
+      color: #fff;
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      display: none;
+    }
+    .conv-badge.visible { display: block; }
+    .chats-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #CCC;
+      font-size: 13px;
+      gap: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    /* ── Panel derecho: ventana de conversación ── */
+    .chats-ventana {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .chat-ventana-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #E8E8E8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chat-ventana-nombre {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--texto-primario);
+    }
+    .chat-ventana-articulo {
+      font-size: 11px;
+      color: var(--texto-muted);
+    }
+    .chat-mensajes {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--bg-hover);
+    }
+    .msg-burbuja {
+      max-width: 70%;
+      padding: 9px 13px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .msg-enviado {
+      align-self: flex-end;
+      background: #111;
+      color: #E2FF00;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-recibido {
+      align-self: flex-start;
+      background: var(--bg-tarjeta);
+      color: var(--texto-primario);
+      border: 1px solid #E8E8E8;
+      border-bottom-left-radius: 4px;
+    }
+    .msg-hora {
+      font-size: 10px;
+      opacity: .6;
+      display: block;
+      margin-top: 3px;
+      text-align: right;
+    }
+    .chat-input-wrap {
+      padding: 12px 14px;
+      border-top: 1px solid #E8E8E8;
+      display: flex;
+      gap: 8px;
+      background: var(--bg-tarjeta);
+    }
+    .chat-input-msg {
+      flex: 1;
+      border: 1.5px solid #E0E0E0;
+      border-radius: 20px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+    }
+    .chat-input-msg:focus { border-color: var(--texto-primario); }
+    .chat-enviar-btn {
+      background: #111;
+      color: #E2FF00;
+      border: none;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .chat-enviar-btn:hover { background: #333; }
+    .chat-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #CCC;
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      #view-chats { flex-direction: column; height: auto; }
+      .chats-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #E8E8E8; max-height: 220px; }
+    }
+
+    /* ── HIDDEN ── */
+    .hidden { display: none !important; }
+
+    /* ══════════════════════════════════════════════════
+       MODAL DETALLE DE ARTÍCULO
+    ══════════════════════════════════════════════════ */
+    .detalle-modal {
+      background: var(--bg-tarjeta);
+      border-radius: 20px;
+      width: 92%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 0;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+    }
+    .detalle-cerrar {
+      position: absolute;
+      top: 12px; right: 14px;
+      background: rgba(0,0,0,0.45);
+      border: none;
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+    /* ── Carrusel ── */
+    .detalle-carrusel {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-hover);
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+    }
+    .detalle-carrusel-img {
+      width: 100%; height: 100%;
+      object-fit: contain;   /* muestra la imagen completa sin recortes */
+      background: var(--bg-hover);   /* fondo gris muy claro para los laterales vacíos */
+      display: none;
+    }
+    .detalle-carrusel-img.activa { display: block; }
+    .detalle-carrusel-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 56px;
+      color: #D0D0D0;
+    }
+    .carrusel-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.4);
+      border: none; border-radius: 50%;
+      width: 36px; height: 36px;
+      color: #fff; font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5;
+      transition: background .15s;
+    }
+    .carrusel-btn:hover { background: rgba(0,0,0,0.65); }
+    .carrusel-prev { left: 10px; }
+    .carrusel-next { right: 10px; }
+    .carrusel-dots {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 5px;
+    }
+    .carrusel-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none; cursor: pointer;
+      transition: background .15s;
+    }
+    .carrusel-dot.activo { background: var(--bg-tarjeta); }
+    /* ── Cuerpo del modal ── */
+    .detalle-cuerpo {
+      padding: 20px 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .detalle-tipo-badge {
+      display: inline-flex; align-items: center;
+      gap: 5px;
+      background: var(--bg-input);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--texto-secundario);
+      width: fit-content;
+    }
+    .detalle-titulo {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--texto-primario);
+      line-height: 1.2;
+    }
+    .detalle-precio {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--texto-primario);
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+    .detalle-precio .precio-monto {
+      font-size: 22px;   /* mismo tamaño que el $ */
+      font-weight: 900;
+      color: var(--texto-primario);
+    }
+    .detalle-precio .precio-cobro {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--texto-muted);
+      margin-left: 3px;
+    }
+    .detalle-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .detalle-tag {
+      background: var(--bg-principal);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--texto-secundario);
+    }
+    .detalle-descripcion {
+      font-size: 13px;
+      color: var(--texto-secundario);
+      line-height: 1.6;
+      padding: 12px;
+      background: var(--bg-hover);
+      border-radius: 10px;
+      border: 1px solid #EEE;
+    }
+    .detalle-vendedor {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border-radius: 12px;
+      border: 1px solid var(--borde-suave);
+    }
+    .detalle-vendedor-info { flex: 1; }
+    .detalle-vendedor-nombre { font-weight: 800; font-size: 14px; color: var(--texto-primario); }
+    .detalle-vendedor-sub { font-size: 12px; color: var(--texto-muted); margin-top: 1px; }
+    .detalle-rating {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 12px; color: #F59E0B; font-weight: 700;
+    }
+    .btn-chatear {
+      width: 100%;
+      padding: 14px;
+      background: #111;
+      color: #E2FF00;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: background .15s, transform .1s;
+      font-family: inherit;
+    }
+    .btn-chatear:hover { background: #222; transform: translateY(-1px); }
+    .btn-chatear:active { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="location.href='/'" style="cursor:pointer;" title="Ir al inicio">Equip<span>Ya</span></div>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input id="searchInput" type="text" placeholder="Buscar herramientas, servicios, zonas..." oninput="renderFeed()"/>
+  </div>
+  <div class="header-right">
+    <button class="btn-ai" onclick="openAI()">🤖 Asistente IA</button>
+    <button class="btn-upload" onclick="openUpload()">+ Subir</button>
+    <button class="btn-tema" id="btnTema" onclick="toggleTema()" title="Cambiar tema">
+      <!-- Ícono luna (visible en light mode) -->
+      <svg id="icono-luna" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--texto-primario)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+      <!-- Ícono sol (visible en dark mode) -->
+      <svg id="icono-sol" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--acento)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1"  x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+    <div class="avatar-contenedor" id="avatarContenedor" onclick="toggleAvatarAccion(event)" title="Mi cuenta" style="position:relative;">
+      <div class="avatar-badge oculto" id="avatar-badge-chats">0</div>
+      <img  class="avatar-imagen"   id="avatarImagen"  src="" alt="Avatar" style="display:none;" onerror="this.style.display='none';document.getElementById('avatarInicial').style.display='flex';"/>
+      <div  class="avatar-inicial"  id="avatarInicial" style="display:flex;font-size:16px;">👤</div>
+      <div class="perfil-menu" id="perfilMenu">
+        <button class="perfil-menu-btn" onclick="irAPerfil()">&#128100; Mi Perfil</button>
+        <button class="perfil-menu-btn" onclick="irAMisPublicaciones()">&#128230; Mis Publicaciones</button>
+        <button class="perfil-menu-btn" onclick="irAChats()">&#128172; Chats</button>
+        <button class="perfil-menu-btn" onclick="irAConfiguracion()">&#9881; Configuraci&#243;n</button>
+        <hr class="perfil-menu-separador"/>
+        <button class="perfil-menu-btn danger" onclick="cerrarSesion()">&#128682; Cerrar Sesi&#243;n</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="body-wrap">
+
+  <aside>
+    <div id="mapa-leaflet"></div>
+
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5">
+            <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+            <line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+          </svg>
+        </div>
+        <span>Zona</span>
+      </div>
+      <button class="btn-sede" onclick="irASedeFactultad()">📍 Sede Facultad</button>
+      <div style="position:relative;">
+        <input type="text" id="zona-buscar" class="inp" placeholder="Buscar ubicación..." autocomplete="off" oninput="buscarZonaMapa()" style="padding-right:0;"/>
+        <div id="zona-sugerencias" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;z-index:9999;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12);"></div>
+      </div>
+      <div class="km-btns">
+        <button class="km-btn" data-km="2"  onclick="seleccionarRadio(this, 2)">2 km</button>
+        <button class="km-btn" data-km="5"  onclick="seleccionarRadio(this, 5)">5 km</button>
+        <button class="km-btn" data-km="10" onclick="seleccionarRadio(this, 10)">10 km</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+        <span>Precio</span>
+      </div>
+      <div class="range-labels">
+        <span class="range-badge" id="precio-min-label">$0</span>
+        <span class="range-badge" id="precio-max-label">$50.000</span>
+      </div>
+      <div class="range-track">
+        <div class="range-bar"><div class="range-fill" id="range-fill-bar"></div></div>
+        <input type="range" id="precio-min" min="0" max="50000" value="0"     oninput="actualizarSliderPrecio()"/>
+        <input type="range" id="precio-max" min="0" max="50000" value="50000" oninput="actualizarSliderPrecio()"/>
+      </div>
+      <select id="orden-precio" class="inp" style="margin-top:8px;cursor:pointer;">
+        <option value="">Ordenar por precio...</option>
+        <option value="asc">De más barato a más caro</option>
+        <option value="desc">De más caro a más barato</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+
+    <div class="filter-section">
+      <div class="filter-title">
+        <div class="filter-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#111">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+          </svg>
+        </div>
+        <span>Valoración</span>
+      </div>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s5"></div> <span class="muted-sm">y más</span></label>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s4"></div> <span class="muted-sm">y más</span></label>
+      <label class="star-row"><input type="checkbox"/> <div class="stars-sm" id="s3"></div> <span class="muted-sm">y más</span></label>
+    </div>
+
+    <button class="btn-filter" onclick="aplicarFiltros()">Aplicar filtros</button>
+  </aside>
+
+  <main id="view-feed-global">
+    <div class="ai-banner" onclick="openAI()">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div style="font-weight:800;font-size:14px;color:#E2FF00">¿No sabés qué herramientas necesitás?</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">Preguntale a nuestro asistente IA y te dice el paso a paso de tu proyecto ✨</div>
+      </div>
+      <div class="ai-banner-arrow">→</div>
+    </div>
+    <div class="feed-meta">
+      <span class="feed-count" id="feedCount">16 resultados</span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty hidden" id="emptyState">
+      <div class="icon">🔍</div>
+      <p id="emptyMsg">No encontramos resultados</p>
+    </div>
+  </main>
+
+  <main id="view-mis-publicaciones" class="hidden">
+    <div class="mis-pub-header">
+      <div class="mis-pub-titulo">📦 Mis Publicaciones Activas</div>
+      <button class="btn-volver" onclick="mostrarFeedGlobal()">← Volver al inicio</button>
+    </div>
+    <div class="panel-administracion">
+      <table class="tabla-pub">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Precio</th>
+            <th>Ubicación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-mis-publicaciones-body">
+          </tbody>
+      </table>
+      <div class="empty hidden" id="misPubsEmptyState">
+        <div class="icon">🔨</div>
+        <p>Aún no publicaste ninguna herramienta o servicio.</p>
+      </div>
+    </div>
+  </main>
+
+  <main id="view-chats" class="hidden">
+    <!-- Sidebar: lista de conversaciones -->
+    <div class="chats-sidebar">
+      <div class="chats-sidebar-header">
+        <div class="chats-sidebar-titulo">💬 Mis Chats</div>
+        <div class="chats-filtros">
+          <button class="chat-filtro-btn activo" id="btn-filtro-todos"
+            onclick="filtrarConversaciones(false)">📥 Todos</button>
+          <button class="chat-filtro-btn" id="btn-filtro-sinleer"
+            onclick="filtrarConversaciones(true)">🔴 Sin leer</button>
+        </div>
+      </div>
+      <div class="chats-lista" id="chats-lista">
+        <div class="chats-empty" id="chats-empty">
+          <div style="font-size:36px;">💬</div>
+          <div>No tenés conversaciones aún.</div>
+          <div style="font-size:11px;">Cuando alguien te escriba por un artículo, aparecerá acá.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventana de conversación activa -->
+    <div class="chats-ventana">
+      <!-- Estado inicial: ninguna conversación seleccionada -->
+      <div class="chat-placeholder" id="chat-placeholder">
+        <div style="font-size:48px;">💬</div>
+        <div style="font-weight:700;color:#888;">Seleccioná una conversación</div>
+        <div style="font-size:12px;color:#BBB;">Los mensajes aparecerán acá</div>
+      </div>
+
+      <!-- Ventana activa (oculta hasta que se seleccione una conv) -->
+      <div id="chat-ventana-activa" style="display:none; flex-direction:column; flex:1; min-height:0;">
+        <div class="chat-ventana-header">
+          <div id="chat-ventana-avatar-wrap"></div>
+          <div>
+            <div class="chat-ventana-nombre" id="chat-ventana-nombre">—</div>
+            <div class="chat-ventana-articulo" id="chat-ventana-articulo"></div>
+          </div>
+        </div>
+        <div class="chat-mensajes" id="chat-mensajes"></div>
+        <div class="chat-input-wrap">
+          <textarea class="chat-input-msg" id="chat-input-msg" rows="1"
+            placeholder="Escribí un mensaje..."
+            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();enviarMensajeChat();}"></textarea>
+          <button class="chat-enviar-btn" onclick="enviarMensajeChat()" title="Enviar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+
+
+<div class="modal-overlay hidden" id="aiModal" onclick="closeAI(event)">
+  <div class="ai-modal" onclick="event.stopPropagation()">
+    <div class="ai-modal-header">
+      <div class="ai-modal-icon">🤖</div>
+      <div>
+        <div class="ai-modal-title">Asistente EquipYa</div>
+        <div class="ai-modal-sub">Powered by IA · Te ayuda a construir</div>
+      </div>
+      <button class="ai-modal-close" onclick="document.getElementById('aiModal').classList.add('hidden')">×</button>
+    </div>
+    <div class="ai-quick-chips" id="quickChips">
+      <button class="chip" onclick="sendAI('¿Qué necesito para armar un placard?')">¿Qué necesito para armar un placard?</button>
+      <button class="chip" onclick="sendAI('Cómo instalo un piso flotante')">Cómo instalo un piso flotante</button>
+      <button class="chip" onclick="sendAI('Herramientas para colgar muebles')">Herramientas para colgar muebles</button>
+      <button class="chip" onclick="sendAI('Quiero pintar una habitación')">Quiero pintar una habitación</button>
+    </div>
+    <div class="ai-messages" id="aiMessages">
+      <div class="msg-row">
+        <div class="msg-bot-icon">🤖</div>
+        <div class="msg-bubble bot">¡Hola! Soy tu asistente EquipYa 🛠️<br><br>Preguntame qué vas a construir, reparar o instalar y te digo exactamente qué herramientas necesitás y el paso a paso. ¿Con qué empezamos?</div>
+      </div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-text-input" id="aiInput" placeholder="Ej: Quiero armar una biblioteca de madera..." onkeydown="if(event.key==='Enter') sendAI()"/>
+      <button class="ai-send" onclick="sendAI()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E2FF00" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="uploadModal" onclick="closeUpload(event)">
+  <div class="upload-modal" onclick="event.stopPropagation()">
+    <div class="upload-title">Subir publicación</div>
+    <div class="upload-sub">Producto o servicio para ofrecer</div>
+    <div class="type-btns">
+      <button class="type-btn active" id="btnProd" onclick="setType('Producto')">Producto</button>
+      <button class="type-btn inactive" id="btnServ" onclick="setType('Servicio')">Servicio</button>
+    </div>
+    <form id="formulario-publicar">
+      <label class="field-lbl">nombre</label>
+      <input class="field-inp" name="nombre" placeholder="Ej. Taladro Bosch / Electricista" required />
+
+      <label class="field-lbl">Precio</label>
+      <input class="field-inp" name="precio" type="number" placeholder="$0.000" required/>
+
+      <label class="field-lbl">Categoría</label>
+      <select class="field-inp" name="categoria" required style="appearance:auto; cursor:pointer;">
+        <option value="" disabled selected>Seleccioná una categoría...</option>
+        <option value="Herramientas">🔧 Herramientas</option>
+        <option value="Fotografía">📷 Fotografía</option>
+        <option value="Soldadura">🔥 Soldadura</option>
+        <option value="Jardinería">🌱 Jardinería</option>
+        <option value="Electrónica">💡 Electrónica</option>
+        <option value="Plomería">🚿 Plomería</option>
+        <option value="Limpieza">🧹 Limpieza</option>
+        <option value="Construcción">🏗️ Construcción</option>
+        <option value="Pintura">🖌️ Pintura</option>
+        <option value="Servicio Profesional">👷 Servicio Profesional</option>
+      </select>
+
+      <label class="field-lbl">Ubicación</label>
+      <div class="ubicacion-wrap">
+        <input
+          class="field-inp"
+          id="ubicacion-publicacion"
+          name="ubicacion"
+          placeholder="Ej: Glew, Almirante Brown, Buenos Aires"
+          list="sugerencias-ubicacion-pub"
+          oninput="buscarUbicacionArticulo()"
+          autocomplete="off"
+          required
+        />
+        <button
+          type="button"
+          id="btn-gps-pub"
+          class="btn-gps"
+          onclick="obtenerUbicacionGPS()"
+          title="Usar mi ubicación actual (GPS)"
+        >🎯</button>
+      </div>
+      <datalist id="sugerencias-ubicacion-pub"></datalist>
+
+      <label class="field-lbl">Fotos <span style="color:#999;font-weight:400">(hasta 5 imágenes)</span></label>
+      <div class="upload-area" style="padding: 16px 10px; cursor:pointer;" onclick="document.getElementById('imagenes').click()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" style="margin-bottom:6px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="font-size:13px;color:#888;">Tocá para elegir fotos</div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px;">Máximo 5 · JPG, PNG, WEBP</div>
+        <input type="file" id="imagenes" name="imagenes" accept="image/*" multiple style="display:none;"
+          onchange="previsualizarFotosPublicacion(this)">
+      </div>
+      <div id="preview-fotos-pub" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"></div>
+
+      <button type="submit" class="btn-publish">Publicar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// URL del Backend configurada dinámicamente para la red de Radmin VPN de Leandro
+const URL_BACKEND = "http://26.146.117.180:3000";
+const ACCENT = "#E2FF00";
+const COLORS = ["#3B82F6","#8B5CF6","#EC4899","#F59E0B","#10B981","#06B6D4","#EF4444"];
+
+// ── Coordenadas GPS del artículo en edición ───────────────────────────────────
+// Se populan con obtenerUbicacionGPS() y se envían al backend en el submit.
+let latitudArticulo  = null;
+let longitudArticulo = null;
+
+const products = [];
+const services = [];
+const allItems = [...products, ...services];
+const TABS = ["Todo","Productos","Servicios","Cámaras","Herramientas","Electricidad","Plomería"];
+let activeTab = "Todo";
+const savedSet = new Set(allItems.filter(i=>i.saved).map(i=>i.id));
+const likedSet = new Set();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init() {
+  // Restaurar tema guardado ANTES del primer render (evita flash of light theme)
+  try {
+    const temaGuardado = localStorage.getItem(_STORAGE_TEMA);
+    if (temaGuardado) _aplicarTema(temaGuardado);
+  } catch(e) {}
+
+  // Stars sidebar
+  [5,4,3].forEach(n => {
+    const el = document.getElementById('s'+n);
+    if(el) el.innerHTML = [1,2,3,4,5].map(i =>
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="${i<=n?'#F5B800':'#E0E0E0'}">
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+      </svg>`).join('');
+  });
+  // Tabs
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = TABS.map(t =>
+    `<button class="tab${t===activeTab?' active':''}" onclick="setTab('${t}')">${t}</button>`
+  ).join('');
+  renderFeed();
+  // Cargar el badge de chats sin leer al iniciar (solo si hay sesión activa)
+  actualizarBadgeChats();
+  // Inicializar mapa Leaflet
+  inicializarMapa();
+}
+
+function setTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => { if(b.textContent===t) b.classList.add('active'); });
+  renderFeed();
+}
+
+function getInitials(name) {
+  return name.split('_').map(p=>p[0]?.toUpperCase()||'').join('').slice(0,2);
+}
+function getColor(name) { return COLORS[name.charCodeAt(0) % COLORS.length]; }
+function starsSVG(rating, size=13) {
+  return [1,2,3,4,5].map(i =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${i<=rating?'#F5B800':'#E0E0E0'}">
+      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+    </svg>`).join('');
+}
+
+function verifiedSVG() {
+  return `<svg width="13" height="13" viewBox="0 0 24 24">
+    <path d="M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806
+      3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438
+      3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806
+      3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138
+      3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946
+      3.42 3.42 0 013.138-3.138z" stroke="#3B82F6" stroke-width="2" fill="none"/>
+    <path d="M9 12l2 2 4-4" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function renderCard(item) {
+  const idStr = item._id || item.id;
+  const isService = item.tipo === 'servicio' || item.type === 'service';
+  const priceLabel = isService ? '/visita' : `/${item.tipoCobro || 'día'}`;
+
+  const precioFijo = item.precioBase || item.price || 0;
+  const savings = Math.round(precioFijo * 12);
+  const isSaved = savedSet.has(idStr);
+  const isLiked = likedSet.has(idStr);
+
+  const titulo = item.titulo || item.name || 'Sin titutulo';
+  // Soporta tanto imagenes[] (nuevo) como imagen (legado) para retrocompatibilidad
+  const primeraImagen = (item.imagenes && item.imagenes.length > 0) ? item.imagenes[0] : (item.imagen || null);
+  const imagenReal = primeraImagen ? `${URL_BACKEND}${primeraImagen}` : '';
+  const vendedorNom = (item.vendedor && item.vendedor.nombre) ? item.vendedor.nombre : 'usuario';
+  const vendedorAvatar = item.vendedor?.avatar ? `${URL_BACKEND}${item.vendedor.avatar}` : null;
+  const ubicacionStr = item.localidad || item.location || 'ubicacion no especificada';
+  const catStr = item.categoria || item.category || '';
+  const ratingNum = item.vendedor?.promedioValoracion || item.rating || 0;
+
+  const avatarHTML = vendedorAvatar
+    ? `<img src="${vendedorAvatar}" alt="${vendedorNom}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+       <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${getColor(vendedorNom)};display:none;">${getInitials(vendedorNom)}</div>`
+    : `<div class="avatar" style="width:28px;height:28px;font-size:10px;background:${getColor(vendedorNom)}">${getInitials(vendedorNom)}</div>`;
+
+  return `
+    <div class="card" id="card-${idStr}" onclick="abrirDetalleArticuloById('${idStr}')" style="cursor:pointer;">
+      ${isService ? `<div class="service-label">SERVICIO</div>` : ''}
+      <div class="card-header">
+        <div class="card-user">
+          ${avatarHTML}
+          <span class="card-username">${vendedorNom}</span>
+        </div>
+        <button class="save-btn" onclick="toggleSave('${idStr}')" title="Guardar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isSaved?'#F5B800':'none'}" stroke="${isSaved?'#F5B800':'#999'}" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-img">
+        <img src="${imagenReal}" alt="${titulo}" onerror="this.onerror=null; this.src=''; this.style.display='none';">
+      </div>
+      <div class="card-body">
+        <div class="card-name" title="${titulo}">${titulo}</div>
+        ${isService ? `<div class="card-category">${catStr}</div>` : ''}
+        <div class="stars">${starsSVG(ratingNum)}</div>
+        <div class="card-meta">
+          <div class="card-location">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            ${ubicacionStr}
+          </div>
+          <div class="price-badge">$${precioFijo.toLocaleString('es-AR')}${priceLabel}</div>
+        </div>
+        <div class="card-saving">${isService ? 'Presupuesto sin cargo · Responde en &lt;1h' : `Ahorro: $${savings.toLocaleString('es-AR')} vs nuevo`}</div>
+        <div class="card-actions">
+          <button class="action-btn" onclick="toggleLike('${idStr}')" style="color:${isLiked?'#F5B800':'#999'}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="${isLiked?'#F5B800':'none'}" stroke="${isLiked?'#F5B800':'#999'}" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+            Me gusta
+          </button>
+          <button class="action-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            Comentar
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function renderFeed() {
+  const buscador = document.getElementById('searchInput')?.value.trim() || '';
+
+  // Filtro de valoración: tomar el mínimo marcado (el checkbox más bajo activo)
+  // Ej: si el usuario marca "3 estrellas y más", queremos ver todo ≥ 3
+  let valoracionMin = '';
+  const chk3 = document.getElementById('s3')?.previousElementSibling;
+  const chk4 = document.getElementById('s4')?.previousElementSibling;
+  const chk5 = document.getElementById('s5')?.previousElementSibling;
+  if (chk3?.checked) valoracionMin = '3';
+  if (chk4?.checked) valoracionMin = '4';   // más restrictivo: sobrescribe
+  if (chk5?.checked) valoracionMin = '5';   // más restrictivo: sobrescribe
+
+  let categoria = '';
+  if (activeTab === 'Herramientas') categoria = 'Herramientas';
+  if (activeTab === 'Electricidad') categoria = 'Electricidad';
+  if (activeTab === 'Plomeria') categoria = 'Plomeria';
+
+  // ── Construir URL con todos los filtros activos ──────────────────────────
+  let url = `${URL_BACKEND}/api/articulos?`;
+
+  if (buscador) url += `localidad=${encodeURIComponent(buscador)}&`;
+  if (categoria) url += `categoria=${encodeURIComponent(categoria)}&`;
+  if (valoracionMin) url += `valoracion=${valoracionMin}&`;
+
+  // Filtro de distancia: bounding box a partir de la zona y el radio elegido
+  if (_filtroZonaLat !== null && _filtroZonaLng !== null && _filtroRadioKm !== null) {
+    const { minLat, maxLat, minLng, maxLng } = _calcularBoundingBox(_filtroZonaLat, _filtroZonaLng, _filtroRadioKm);
+    url += `minLat=${minLat}&maxLat=${maxLat}&minLng=${minLng}&maxLng=${maxLng}&`;
+  }
+
+  // Filtro de precio
+  const precioMinVal = parseInt(document.getElementById('precio-min')?.value || '0');
+  const precioMaxVal = parseInt(document.getElementById('precio-max')?.value || '50000');
+  if (precioMinVal > 0)     url += `precioMin=${precioMinVal}&`;
+  if (precioMaxVal < 50000) url += `precioMax=${precioMaxVal}&`;
+
+  // Ordenamiento
+  const ordenVal = document.getElementById('orden-precio')?.value || '';
+  if (ordenVal) url += `orden=${ordenVal}&`;
+
+  try{
+    const respuesta = await fetch (url);
+    const datos = await respuesta.json();
+
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('feedCount');
+
+
+    if (!datos.articulos || datos.articulos.length === 0) {
+      grid.innerHTML = '';
+      empty.classList.remove('hidden');
+      document.getElementById('emptyMsg').textContent = buscador ? `No encontramos resultados en "${buscador}"` : 'No hay resultados para este filtro';
+      count.textContent = '0 resultados';
+    } else {
+      empty.classList.add('hidden');
+      // Guardamos cada artículo en el cache para el modal de detalle
+      datos.articulos.forEach(_guardarEnCache);
+      const tarjetasHTML = datos.articulos.map(renderCard).join('');
+      console.log("HTML generado por renderCard:", tarjetasHTML);
+      console.log("Artículos crudos que llegaron:", datos.articulos);
+
+      // 2. Lo metemos en la grilla y FORZAMOS que se vea
+      grid.innerHTML = tarjetasHTML;
+      grid.style.display = "grid"; 
+      grid.style.opacity = "1";
+      
+      // 3. Actualizamos el contador
+      count.textContent = `${datos.total} resultado${datos.total !== 1 ? 's' : ''}`;
+      
+      // 4. Actualizar marcadores en el mapa
+      actualizarMarcadoresArticulos(datos.articulos);
+    }
+  }catch (error){
+    console.error("Error al conectar con el servidor:", error);
+  }
+}
+
+function toggleSave(id) {
+  if (savedSet.has(id)) savedSet.delete(id); else savedSet.add(id);
+  renderFeed();
+}
+function toggleLike(id) {
+  if (likedSet.has(id)) likedSet.delete(id); else likedSet.add(id);
+  renderFeed();
+}
+// toggleChat eliminado: el chat directo fue reemplazado por la vista de Chats
+function openAI() { document.getElementById('aiModal').classList.remove('hidden'); }
+function closeAI(e) { if(e.target.id==='aiModal') document.getElementById('aiModal').classList.add('hidden'); }
+// ── Preview de fotos en el formulario de publicación ─────────────────────────
+function previsualizarFotosPublicacion(input) {
+  const archivos = Array.from(input.files);
+  if (archivos.length > 5) {
+    alert('Podés subir un máximo de 5 fotos. Se tomarán solo las primeras 5.');
+    // Recortamos a 5 usando DataTransfer
+    const dt = new DataTransfer();
+    archivos.slice(0, 5).forEach(f => dt.items.add(f));
+    input.files = dt.files;
+  }
+  const contenedor = document.getElementById('preview-fotos-pub');
+  contenedor.innerHTML = '';
+  Array.from(input.files).forEach((archivo, i) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid #E0E0E0;';
+      img.title = archivo.name;
+      contenedor.appendChild(img);
+    };
+    reader.readAsDataURL(archivo);
+  });
+}
+
+function openUpload() {
+  // Reseteamos coordenadas anteriores al abrir un formulario nuevo
+  latitudArticulo  = null;
+  longitudArticulo = null;
+  // Limpiamos preview de fotos
+  const prev = document.getElementById('preview-fotos-pub');
+  if (prev) prev.innerHTML = '';
+  const inp = document.getElementById('imagenes');
+  if (inp) inp.value = '';
+  document.getElementById('uploadModal').classList.remove('hidden');
+  // GPS manual: el usuario presiona el botón 🎯 cuando quiera usar su ubicación actual
+}
+
+// ── Geolocalización GPS + Geocodificación Inversa ─────────────────────────────
+/**
+ * 1. Pide permiso de ubicación al navegador (popup nativo).
+ * 2. Con lat/lon obtenidos, llama a Nominatim /reverse para conseguir la dirección.
+ * 3. Inyecta la dirección legible en el input y guarda lat/lon globalmente.
+ */
+async function obtenerUbicacionGPS() {
+  if (!navigator.geolocation) {
+    alert('Tu navegador no soporta geolocalización. Escribí la dirección a mano.');
+    return;
+  }
+
+  const boton = document.getElementById('btn-gps-pub');
+  const input = document.getElementById('ubicacion-publicacion');
+
+  // Estado de carga visual
+  if (boton) { boton.disabled = true; boton.textContent = '⏳'; }
+  if (input) { input.placeholder = 'Obteniendo ubicación...'; }
+
+  navigator.geolocation.getCurrentPosition(
+    // ── Éxito: tenemos coordenadas ──────────────────────────────────────────
+    async (posicion) => {
+      const lat = posicion.coords.latitude;
+      const lon = posicion.coords.longitude;
+
+      // Guardamos globalmente para incluirlas en el FormData al publicar
+      latitudArticulo  = lat;
+      longitudArticulo = lon;
+
+      try {
+        // Geocodificación inversa: coordenadas → dirección legible en español
+        const params = new URLSearchParams({
+          format:         'json',
+          lat:             lat,
+          lon:             lon,
+          countrycodes:   'ar',
+          addressdetails: '1',
+        });
+        const res  = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?${params}`,
+          { headers: { 'Accept-Language': 'es' } }
+        );
+        const data = await res.json();
+
+        const addr    = data.address || {};
+        const calle   = addr.road || '';
+        const numero  = addr.house_number ? ` ${addr.house_number}` : '';
+        const barrio  = addr.suburb || addr.neighbourhood || '';
+        const ciudad  = addr.city || addr.town || addr.village || addr.municipality || '';
+        const partido = addr.county || '';
+
+        // "Acevedo 8, Glew, Almirante Brown" — omitimos provincia para que sea compacto
+        const direccionLegible = [calle + numero, barrio, ciudad || partido]
+          .filter(Boolean).join(', ');
+
+        if (input) {
+          input.value       = direccionLegible || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+          input.placeholder = 'Ej: Glew, Almirante Brown, Buenos Aires';
+        }
+      } catch {
+        // Si el reverse geocoding falla, al menos dejamos las coordenadas numéricas
+        if (input) {
+          input.value       = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+          input.placeholder = 'Ej: Glew, Almirante Brown, Buenos Aires';
+        }
+      } finally {
+        if (boton) { boton.disabled = false; boton.textContent = '🎯'; }
+      }
+    },
+
+    // ── Error: el usuario negó permiso o falló el GPS ─────────────────────
+    (error) => {
+      let mensaje = 'No se pudo obtener la ubicación.';
+      if (error.code === error.PERMISSION_DENIED)
+        mensaje = 'Permiso de ubicación denegado. Escribí la dirección manualmente o habilitalo en la configuración del navegador.';
+      if (error.code === error.POSITION_UNAVAILABLE)
+        mensaje = 'No se pudo determinar la ubicación. Intentá de nuevo o escribila a mano.';
+      if (error.code === error.TIMEOUT)
+        mensaje = 'La búsqueda de ubicación tardó demasiado. Intentá de nuevo.';
+
+      // Solo mostramos alert si el error fue explícito (no en el auto-disparo silencioso)
+      if (error.code === error.PERMISSION_DENIED) alert(mensaje);
+
+      if (boton) { boton.disabled = false; boton.textContent = '🎯'; }
+      if (input) { input.placeholder = 'Ej: Glew, Almirante Brown, Buenos Aires'; }
+    },
+
+    // ── Opciones ──────────────────────────────────────────────────────────
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+function closeUpload(e) { if(e.target.id==='uploadModal') document.getElementById('uploadModal').classList.add('hidden'); }
+function setType(t) {
+  document.getElementById('btnProd').className = 'type-btn ' + (t==='Producto'?'active':'inactive');
+  document.getElementById('btnServ').className = 'type-btn ' + (t==='Servicio'?'active':'inactive');
+}
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+const aiHistory = [];
+
+async function sendAI(preset) {
+  const input = document.getElementById('aiInput');
+  const msg = preset || input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  document.getElementById('quickChips').classList.add('hidden');
+  appendMsg('user', msg);
+  aiHistory.push({ role:'user', content: msg });
+  const typingId = appendTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Sos el asistente de EquipYa, plataforma argentina de alquiler de herramientas y servicios.
+Tu rol: ayudar al usuario con qué herramientas necesita y el paso a paso de su proyecto.
+Respondé en español rioplatense. Sé conciso pero completo. Usá emojis en las listas.
+Formato: primero "🛠️ Herramientas que necesitás:", luego "📋 Paso a paso:", luego "💡 Tip EquipYa:".`,
+        messages: aiHistory
+      })
+    });
+    removeTyping(typingId);
+    const data = await res.json();
+    const reply = data.content?.find(b=>b.type==='text')?.text || 'No pude procesar tu consulta. Intentá de nuevo.';
+    aiHistory.push({ role:'assistant', content: reply });
+    appendMsg('bot', reply);
+  } catch {
+    removeTyping(typingId);
+    appendMsg('bot', 'Ups, hubo un error de conexión. Intentá de nuevo 🙏');
+  }
+}
+
+function appendMsg(role, text) {
+  const container = document.getElementById('aiMessages');
+  const isBot = role === 'bot';
+  const formatted = isBot ? text.replace(/\n/g,'<br>') : text;
+  const html = isBot
+    ? `<div class="msg-row"><div class="msg-bot-icon">🤖</div><div class="msg-bubble bot">${formatted}</div></div>`
+    : `<div class="msg-row user"><div class="msg-bubble user">${formatted}</div></div>`;
+  container.insertAdjacentHTML('beforeend', html);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendTyping() {
+  const id = 'typing-' + Date.now();
+  document.getElementById('aiMessages').insertAdjacentHTML('beforeend',
+    `<div class="msg-row" id="${id}">
+      <div class="msg-bot-icon">🤖</div>
+      <div class="msg-bubble bot">
+        <span class="typing-dot" style="animation-delay:0s"></span>
+        <span class="typing-dot" style="animation-delay:.2s"></span>
+        <span class="typing-dot" style="animation-delay:.4s"></span>
+      </div>
+    </div>`);
+  document.getElementById('aiMessages').scrollTop = 9999;
+  return id;
+}
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+// ── MODO OSCURO / CLARO ───────────────────────────────────────────────────────
+const _STORAGE_TEMA = 'equipya_theme';
+
+function _aplicarTema(tema) {
+  const esDark = tema === 'dark';
+  document.body.classList.toggle('dark-theme', esDark);
+
+  const luna = document.getElementById('icono-luna');
+  const sol  = document.getElementById('icono-sol');
+  if (luna) luna.style.display = esDark ? 'none'  : 'block';
+  if (sol)  sol.style.display  = esDark ? 'block' : 'none';
+}
+
+function toggleTema() {
+  const esDark = document.body.classList.contains('dark-theme');
+  const nuevoTema = esDark ? 'light' : 'dark';
+  _aplicarTema(nuevoTema);
+  try { localStorage.setItem(_STORAGE_TEMA, nuevoTema); } catch(e) {}
+}
+
+// ── AVATAR DINÁMICO ──────────────────────────────────────────────────────────
+function actualizarAvatar() {
+  const datosUsuario = localStorage.getItem('usuarioEquipYa');
+  const avatarImagen  = document.getElementById('avatarImagen');
+  const avatarInicial = document.getElementById('avatarInicial');
+
+  if (!datosUsuario) {
+    // Sin sesión: mostrar el círculo de iniciales con ícono genérico
+    // No intentamos cargar avatar-defecto.jpg porque Express no lo sirve como estático
+    avatarImagen.style.display  = 'none';
+    avatarInicial.style.display = 'flex';
+    avatarInicial.textContent   = '👤';
+    avatarInicial.style.fontSize = '16px';
+    return;
+  }
+
+  try {
+    const usuario = JSON.parse(datosUsuario);
+    
+    // Si viene una ruta de foto real desde el backend
+    if (usuario.avatar) {
+      // Construir URL completa del avatar (el avatar viene como ruta relativa "/uploads/profiles/xxx.jpg")
+      const rutaAvatar = usuario.avatar.startsWith('http')
+        ? usuario.avatar
+        : `${URL_BACKEND}${usuario.avatar.startsWith('/') ? usuario.avatar : '/' + usuario.avatar}`;
+      avatarImagen.src = rutaAvatar;
+      avatarImagen.style.display  = 'block';
+      avatarInicial.style.display = 'none';
+      // Si la imagen no carga (archivo eliminado, red caída), mostrar inicial
+      avatarImagen.onerror = () => {
+        avatarImagen.style.display  = 'none';
+        avatarInicial.style.display = 'flex';
+        const ini = (usuario.nombre || '?').charAt(0).toUpperCase();
+        avatarInicial.textContent = ini;
+        avatarImagen.onerror = null; // evitar loop
+      };
+    } else {
+      // Sin foto: círculo con inicial
+      const inicial = (usuario.nombre || '?').charAt(0).toUpperCase();
+      avatarImagen.style.display  = 'none';
+      avatarInicial.style.display = 'flex';
+      avatarInicial.textContent   = inicial;
+    }
+  } catch {
+    localStorage.removeItem('usuarioEquipYa');
+    avatarImagen.style.display  = 'none';
+    avatarInicial.style.display = 'flex';
+    avatarInicial.textContent   = '👤';
+    avatarInicial.style.fontSize = '16px';
+  }
+}
+
+// ── MENÚ DESPLEGABLE DE PERFIL ────────────────────────────────────────────────
+function toggleAvatarAccion(evento) {
+  evento.stopPropagation();
+  const haySesion = !!localStorage.getItem('usuarioEquipYa');
+  if (haySesion) {
+    toggleMenuPerfil();
+  } else {
+    abrirModalRegistro();
+  }
+}
+
+// Corregido el tipado para evitar que falle al buscar elementos del login
+function toggleMenuPerfil() {
+  const menu = document.getElementById('perfilMenu');
+  if (menu) menu.classList.toggle('show');
+}
+
+function cerrarMenuPerfil() {
+  const menu = document.getElementById('perfilMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+document.addEventListener('click', function(e) {
+  const contenedor = document.getElementById('avatarContenedor');
+  if (contenedor && !contenedor.contains(e.target)) {
+    cerrarMenuPerfil();
+  }
+});
+
+// ─── Acciones del menú ────────────────────────────────────────────────────────
+function irAPerfil() {
+  cerrarMenuPerfil();
+
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (raw) {
+      const u = JSON.parse(raw);
+      
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      set('perfil-nombre',         u.nombre);
+      set('perfil-apellido',       u.apellido);
+      set('perfil-email',          u.email);
+      set('perfil-telefono',       u.telefono);
+      set('perfil-ubicacion-pref', u.ubicacionPreferida);
+
+      const circulo = document.getElementById('perfil-avatar-circulo');
+      const imgReal = document.getElementById('perfil-avatar-img-real');
+
+      // Si tiene foto, la mostramos en la preview de la ventana
+      if (u.avatar) {
+        circulo.style.display = 'none';
+        imgReal.style.display = 'block';
+        imgReal.src = `${URL_BACKEND}${u.avatar}`;
+      } else {
+        circulo.style.display = 'flex';
+        imgReal.style.display = 'none';
+        circulo.textContent = (u.nombre || '?').charAt(0).toUpperCase();
+      }
+
+      const nombreEl = document.getElementById('perfil-preview-nombre');
+      const emailEl  = document.getElementById('perfil-preview-email');
+      if (nombreEl) nombreEl.textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim();
+      if (emailEl)  emailEl.textContent  = u.email || '';
+    }
+  } catch (err) { console.error("Error al abrir perfil:", err); }
+
+  const alerta = document.getElementById('perfil-alerta');
+  if (alerta) { alerta.textContent = ''; alerta.className = 'alerta-registro'; }
+
+  document.getElementById('perfilModal').classList.remove('hidden');
+}
+
+function cerrarPerfilModal() {
+  document.getElementById('perfilModal').classList.add('hidden');
+}
+
+// Auxiliar para previsualizar la foto de perfil localmente antes de enviar
+function previsualizarAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const circulo = document.getElementById('perfil-avatar-circulo');
+      const imgReal = document.getElementById('perfil-avatar-img-real');
+      circulo.style.display = 'none';
+      imgReal.style.display = 'block';
+      imgReal.src = e.target.result;
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ── Buscador de direcciones con Nominatim (OpenStreetMap) ─────────────────────
+// Parámetros: solo Argentina · sesgado al GBA · máx 5 resultados · debounce 400ms
+// ──────────────────────────────────────────────────────────────────────────────
+const VIEWBOX_GBA = '-59.5,-34.0,-57.5,-35.5'; // Cuadro aproximado del Gran Buenos Aires
+let nominatimTimeout = null;
+
+/**
+ * Consulta Nominatim y rellena un <datalist> con sugerencias.
+ * @param {string} textoQuery  - Texto que escribió el usuario
+ * @param {string} idDatalist  - ID del elemento <datalist> destino
+ */
+async function buscarEnNominatim(textoQuery, idDatalist) {
+  const datalist = document.getElementById(idDatalist);
+  if (!datalist) return;
+  if (textoQuery.length < 4) { datalist.innerHTML = ''; return; }
+
+  clearTimeout(nominatimTimeout);
+  nominatimTimeout = setTimeout(async () => {
+    try {
+      const params = new URLSearchParams({
+        q:              textoQuery,
+        format:         'jsonv2',
+        countrycodes:   'ar',      // Solo resultados de Argentina
+        limit:          '5',       // Máximo 5 sugerencias
+        addressdetails: '1',       // Detalle de partes de la dirección
+        viewbox:        VIEWBOX_GBA,
+        bounded:        '0',       // 0 = GBA tiene prioridad pero busca en todo el país si no hay match
+      });
+
+      const res  = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params}`,
+        { headers: { 'Accept-Language': 'es' } }
+      );
+      const data = await res.json();
+
+      datalist.innerHTML = '';
+      const vistas = new Set(); // Previene duplicados exactos
+
+      data.forEach(lugar => {
+        const addr     = lugar.address || {};
+        const calle    = addr.road || '';
+        const numero   = addr.house_number ? ` ${addr.house_number}` : '';
+        const barrio   = addr.suburb || addr.neighbourhood || '';
+        const ciudad   = addr.city || addr.town || addr.village || addr.municipality || '';
+        const partido  = addr.county || '';
+        const prov     = addr.state || '';
+
+        // Armamos la etiqueta de forma legible: "Calle 123, Barrio, Ciudad/Partido, Provincia"
+        const etiqueta = [calle + numero, barrio, ciudad || partido, prov]
+          .filter(Boolean).join(', ');
+
+        if (!etiqueta || vistas.has(etiqueta)) return; // Salteamos duplicados
+        vistas.add(etiqueta);
+
+        const op = document.createElement('option');
+        op.value = etiqueta;
+        datalist.appendChild(op);
+      });
+    } catch {
+      // Fallback silencioso — el usuario puede igualmente escribir la dirección a mano
+    }
+  }, 400); // Debounce de 400ms: espera a que el usuario termine de tipear
+}
+
+// Wrappers específicos para cada campo del HTML
+function buscarDireccion() {
+  const texto = document.getElementById('perfil-direccion')?.value.trim() || '';
+  buscarEnNominatim(texto, 'sugerencias-direccion');
+}
+
+function buscarUbicacionArticulo() {
+  const texto = document.getElementById('ubicacion-publicacion')?.value.trim() || '';
+  buscarEnNominatim(texto, 'sugerencias-ubicacion-pub');
+}
+
+// ── Guardar perfil en el backend utilizando FormData ──────────────────────────
+async function guardarPerfil(evento) {
+  evento.preventDefault();
+
+  const alerta = document.getElementById('perfil-alerta');
+  alerta.textContent = '';
+  alerta.className   = 'alerta-registro';
+
+  let idUsuario = null;
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (raw) {
+      const u = JSON.parse(raw);
+      idUsuario = u._id || u.id || (u.usuario && (u.usuario._id || u.usuario.id));
+    }
+  } catch { idUsuario = null; }
+
+  if (!idUsuario) {
+    alerta.textContent = 'No se pudo identificar al usuario. Iniciá sesión nuevamente.';
+    alerta.className   = 'alerta-registro error';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('nombre',    document.getElementById('perfil-nombre').value.trim());
+  formData.append('apellido',  document.getElementById('perfil-apellido').value.trim());
+  formData.append('email',     document.getElementById('perfil-email').value.trim().toLowerCase());
+  formData.append('telefono',  document.getElementById('perfil-telefono').value.trim());
+  formData.append('direccion', document.getElementById('perfil-direccion').value.trim());
+
+  const inputFile = document.getElementById('perf-foto');
+  if (inputFile && inputFile.files[0]) {
+    formData.append('fotoPerfil', inputFile.files[0]);
+  }
+
+  const boton   = document.getElementById('btnGuardarPerfil');
+  const texto   = document.getElementById('btn-perfil-texto');
+  const spinner = document.getElementById('perfil-spinner');
+  boton.disabled        = true;
+  texto.textContent     = 'Guardando...';
+  spinner.style.display = 'block';
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, {
+      method:  'PUT',
+      body:    formData,
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok) {
+      const raw    = localStorage.getItem('usuarioEquipYa');
+      const sesion = raw ? JSON.parse(raw) : {};
+      
+      const datosNuevos = datos.usuario || datos;
+      const nuevo = { ...sesion, ...datosNuevos };
+      
+      localStorage.setItem('usuarioEquipYa', JSON.stringify(nuevo));
+      actualizarAvatar();
+
+      alerta.textContent = '¡Perfil actualizado correctamente!';
+      alerta.className   = 'alerta-registro exito';
+      setTimeout(() => {
+        cerrarPerfilModal();
+        window.location.reload();
+      }, 1500);
+    } else {
+      const msg = datos.detalles ? datos.detalles.join(' · ') : datos.error || 'Error al guardar.';
+      alerta.textContent = msg;
+      alerta.className   = 'alerta-registro error';
+    }
+  } catch (errorRed) {
+    console.error('Error de red al guardar perfil:', errorRed);
+    alerta.textContent = 'No se pudo conectar con el servidor.';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    boton.disabled        = false;
+    texto.textContent     = 'Guardar cambios';
+    spinner.style.display = 'none';
+  }
+}
+
+// ── VISTAS DINÁMICAS: MIS PUBLICACIONES ───────────────────────────────────────
+function mostrarFeedGlobal() {
+  document.getElementById('view-mis-publicaciones').classList.add('hidden');
+  document.getElementById('view-chats').classList.add('hidden');
+  document.getElementById('view-feed-global').classList.remove('hidden');
+  _detenerPolling?.();
+}
+
+// irAMisPublicaciones ──
+async function irAMisPublicaciones() {
+  cerrarMenuPerfil();
+  
+  let idUsuario = null;
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (raw) {
+      const u = JSON.parse(raw);
+      // Validación ultra-robusta de IDs: busca en todas las variantes posibles
+      idUsuario = u.id || u._id || (u.usuario && (u.usuario._id || u.usuario.id));
+    }
+  } catch { idUsuario = null; }
+
+  if (!idUsuario) {
+    alert("Iniciá sesión para ver tus publicaciones.");
+    return;
+  }
+
+  document.getElementById('view-feed-global').classList.add('hidden');
+  document.getElementById('view-mis-publicaciones').classList.remove('hidden');
+
+  const tablaBody = document.getElementById('tabla-mis-publicaciones-body');
+  const emptyState = document.getElementById('misPubsEmptyState');
+  tablaBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#888;">Cargando tus publicaciones...</td></tr>`;
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/articulos?idVendedor=${idUsuario}`);
+    const datos = await respuesta.json();
+
+    if (!datos.articulos || datos.articulos.length === 0) {
+      tablaBody.innerHTML = '';
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+      tablaBody.innerHTML = datos.articulos.map(art => {
+        const idArt = art._id || art.id;
+        const imgUrl = (art.imagenes && art.imagenes.length > 0) ? `${URL_BACKEND}${art.imagenes[0]}` : (art.imagen ? `${URL_BACKEND}${art.imagen}` : '');
+        const precio = art.precioBase || art.price || 0;
+        const tipoLabel = art.tipo === 'servicio' || art.type === 'service' ? 'Servicio' : 'Producto';
+        
+        // Escapamos el título para que no rompa comillas en el onclick de HTML
+        const tituloLimpio = (art.titulo || 'Sin título').replace(/"/g, '&quot;').replace(/'/g, '\\\'');
+
+        return `
+          <tr id="fila-pub-${idArt}">
+            <td><img src="${imgUrl}" class="tabla-img" alt="Imagen producto"/></td>
+            <td><div class="tabla-titulo">${art.titulo || 'Sin título'}</div></td>
+            <td><span class="tabla-badge ${tipoLabel.toLowerCase()}">${tipoLabel}</span></td>
+            <td><span class="tabla-precio">$${precio.toLocaleString('es-AR')}</span></td>
+            <td><span style="color:#666;font-size:12px;">${art.localidad || 'Salta'}</span></td>
+            <td>
+              <div class="tabla-acciones">
+                <button class="btn-accion-edit" onclick="abrirModalEdicionArticulo('${idArt}', '${tituloLimpio}', ${precio})">✏️ Editar</button>
+                <button class="btn-accion-del" onclick="eliminarMiPublicacion('${idArt}')">🗑️ Borrar</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    console.error("Error al obtener publicaciones:", err);
+    tablaBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#EF4444;font-weight:600;">Error al conectar con el servidor.</td></tr>`;
+  }
+}
+
+// Función rápida para borrar publicaciones de la base de datos
+async function eliminarMiPublicacion(idArticulo) {
+  if (!confirm("¿Estás seguro de que querés eliminar esta publicación de forma permanente?")) return;
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/articulos/${idArticulo}`, {
+      method: 'DELETE'
+    });
+
+    if (respuesta.ok) {
+      alert("Publicación eliminada correctamente.");
+      document.getElementById(`fila-pub-${idArticulo}`)?.remove();
+      
+      // Si la tabla se queda vacía, prendemos el empty state
+      const tbody = document.getElementById('tabla-mis-publicaciones-body');
+      if (tbody && tbody.children.length === 0) {
+        document.getElementById('misPubsEmptyState').classList.remove('hidden');
+      }
+    } else {
+      alert("No se pudo borrar la publicación.");
+    }
+  } catch (err) {
+    console.error("Error de red al borrar:", err);
+    alert("Error de conexión al servidor.");
+  }
+}
+
+// Variables globales para controlar la edición rápida de artículos
+let idArticuloEditando = null;
+
+function abrirModalEdicionArticulo(id, titulo, precio) {
+  idArticuloEditando = id;
+  document.getElementById('edit-art-nombre').value = titulo;
+  document.getElementById('edit-art-precio').value = precio;
+  document.getElementById('editArticuloModal').classList.remove('hidden');
+}
+
+function cerrarModalEdicionArticulo() {
+  document.getElementById('editArticuloModal').classList.add('hidden');
+  idArticuloEditando = null;
+}
+
+async function guardarEdicionArticulo(e) {
+  e.preventDefault();
+  if (!idArticuloEditando) return;
+
+  const nuevoTitulo = document.getElementById('edit-art-nombre').value.trim();
+  const nuevoPrecio = document.getElementById('edit-art-precio').value;
+
+  if (!nuevoTitulo || !nuevoPrecio) {
+    alert("Todos los campos son obligatorios.");
+    return;
+  }
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/articulos/${idArticuloEditando}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: nuevoTitulo,
+        precio: Number(nuevoPrecio)
+      })
+    });
+
+    if (respuesta.ok) {
+      alert("Publicación modificada correctamente.");
+      cerrarModalEdicionArticulo();
+      irAMisPublicaciones(); // Refrescamos el listado
+    } else {
+      alert("No se pudieron guardar los cambios.");
+    }
+  } catch (err) {
+    console.error("Error de red al editar:", err);
+    alert("Error de conexión.");
+  }
+}
+
+// irAChats(): implementación completa en el módulo de chats (más abajo)
+
+function irAConfiguracion() {
+  cerrarMenuPerfil();
+  abrirConfiguracion();
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('usuarioEquipYa');
+  actualizarAvatar();
+  cerrarMenuPerfil();
+  location.reload();
+}
+
+// ── MODAL REGISTRO ────────────────────────────────────────────────────────────
+function abrirModalRegistro() {
+  limpiarFormulario();
+  document.getElementById('registroModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('reg-nombre').focus(), 100);
+}
+
+function cerrarModalRegistro() {
+  document.getElementById('registroModal').classList.add('hidden');
+}
+
+function abrirModalLogin() {
+  cerrarModalRegistro();
+  document.getElementById('loginModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('log-email').focus(), 100);
+}
+
+function cerrarModalLogin() {
+  document.getElementById('loginModal').classList.add('hidden');
+}
+
+function cerrarRegistro(evento) {
+  if (evento.target.id === 'registroModal') cerrarModalRegistro();
+}
+
+function limpiarFormulario() {
+  ['reg-nombre','reg-apellido','reg-email','reg-contrasena'].forEach(id => {
+    const campo = document.getElementById(id);
+    if(campo) {
+      campo.value = '';
+      campo.classList.remove('error-input');
+    }
+  });
+  mostrarAlerta('', '');
+}
+
+function mostrarAlerta(mensaje, tipo) {
+  const alerta = document.getElementById('reg-alerta');
+  if(alerta) {
+    alerta.textContent = mensaje;
+    alerta.className = 'alerta-registro' + (tipo ? ' ' + tipo : '');
+  }
+}
+
+function ponerCargando(activo) {
+  const boton   = document.getElementById('btnRegistrarse');
+  const texto   = document.getElementById('btn-texto');
+  const spinner = document.getElementById('reg-spinner');
+  if(boton) boton.disabled = activo;
+  if(texto) texto.textContent = activo ? 'Registrando...' : 'Crear cuenta';
+  if(spinner) spinner.style.display = activo ? 'block' : 'none';
+}
+
+function validarCampos(datos) {
+  const errores = [];
+  if (!datos.nombre.trim())   errores.push({ id: 'reg-nombre',    msg: 'El nombre es obligatorio.' });
+  if (!datos.apellido.trim()) errores.push({ id: 'reg-apellido',  msg: 'El apellido es obligatorio.' });
+  const regexEmail = /^\S+@\S+\.\S+$/;
+  if (!datos.email.trim())               errores.push({ id: 'reg-email', msg: 'El email es obligatorio.' });
+  else if (!regexEmail.test(datos.email)) errores.push({ id: 'reg-email', msg: 'El formato de email no es válido.' });
+  if (!datos.contrasena)                errores.push({ id: 'reg-contrasena', msg: 'La contraseña es obligatoria.' });
+  else if (datos.contrasena.length < 6)  errores.push({ id: 'reg-contrasena', msg: 'La contraseña debe tener al menos 6 caracteres.' });
+  return errores;
+}
+
+async function enviarRegistro() {
+  ['reg-nombre','reg-apellido','reg-email','reg-contrasena'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('error-input');
+  });
+  mostrarAlerta('', '');
+
+  const datosFormulario = {
+    nombre:     document.getElementById('reg-nombre').value.trim(),
+    apellido:   document.getElementById('reg-apellido').value.trim(),
+    email:      document.getElementById('reg-email').value.trim().toLowerCase(),
+    contrasena: document.getElementById('reg-contrasena').value,
+  };
+
+  const payload = { ...datosFormulario, contraseña: datosFormulario.contrasena };
+  delete payload.contrasena;
+
+  const erroresCliente = validarCampos(datosFormulario);
+  if (erroresCliente.length > 0) {
+    const errorEl = document.getElementById(erroresCliente[0].id);
+    if(errorEl) {
+      errorEl.classList.add('error-input');
+      errorEl.focus();
+    }
+    mostrarAlerta(erroresCliente[0].msg, 'error');
+    return;
+  }
+
+  ponerCargando(true);
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/usuarios/registro`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok) {
+      localStorage.setItem('usuarioEquipYa', JSON.stringify(datos.usuario));
+      actualizarAvatar();
+
+      mostrarAlerta(`¡Bienvenido/a, ${datos.usuario.nombre}! Tu cuenta fue creada. 🎉`, 'exito');
+      ['reg-nombre','reg-apellido','reg-email','reg-contrasena'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+      });
+      setTimeout(cerrarModalRegistro, 2500);
+    } else {
+      const mensajeError = datos.detalles ? datos.detalles.join(' · ') : datos.error || 'Ocurrió un error. Intentá de nuevo.';
+      mostrarAlerta(mensajeError, 'error');
+    }
+  } catch (errorRed) {
+    console.error('Error de red al registrar:', errorRed);
+    mostrarAlerta('No se pudo conectar con el servidor. ¿Está corriendo el backend en el puerto 3000?', 'error');
+  } finally {
+    ponerCargando(false);
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  const modalAbierto = !document.getElementById('registroModal').classList.contains('hidden');
+  if (modalAbierto && e.key === 'Enter') enviarRegistro();
+});
+
+const formPublicar= document.getElementById("formulario-publicar");
+
+if (formPublicar) {
+  formPublicar.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    // 1. Instanciamos el FormData con los datos base del formulario
+    const datosFormulario = new FormData(formPublicar);
+
+    // 2. Agregamos el tipo (Producto / Servicio)
+    const botonActivo = document.querySelector(".type-btn.active");
+    if (botonActivo) {
+      datosFormulario.append("tipo", botonActivo.innerText.trim());
+    }
+
+    // 3. Coordenadas GPS (obtenidas por obtenerUbicacionGPS al abrir el modal)
+    if (latitudArticulo  !== null) datosFormulario.append('latitud',  latitudArticulo);
+    if (longitudArticulo !== null) datosFormulario.append('longitud', longitudArticulo);
+
+    // 4. Recuperamos el usuario de la sesión actual
+    const usuarioGuardado = localStorage.getItem('usuarioEquipYa');
+    if (usuarioGuardado) {
+      const usuario = JSON.parse(usuarioGuardado);
+      // Extraemos el ID robusto de la sesión
+      const idReal = usuario.id || usuario._id || (usuario.usuario && (usuario.usuario._id || usuario.usuario.id));
+      
+      // 🔥 IMPORTANTE: Lo agregamos directamente al FormData para que Multer lo reciba en req.body
+      datosFormulario.append("idVendedor", idReal);
+    } else {
+      alert("¡Tenés que iniciar sesión para publicar un artículo!");
+      return;
+    }
+
+    try {
+      const respuesta = await fetch(`${URL_BACKEND}/api/articulos`, {
+        method: "POST",
+        body: datosFormulario // Enviamos el FormData completo
+      });
+
+      const resultado = await respuesta.json();
+
+      if (respuesta.ok) {
+        alert("¡Publicación subida con éxito!");
+        formPublicar.reset();
+        document.getElementById("uploadModal").classList.add('hidden');
+        renderFeed();
+      } else {
+        alert("Hubo un error al publicar: " + (resultado.error || "Revisá los datos."));
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+      alert("No se pudo conectar con el servidor.");
+    }
+  });
+}
+
+// ── LOGIN: envío al backend ───────────────────────────────────────────────────
+async function enviarLogin() {
+  ['log-email', 'log-contraseña'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('error-input');
+  });
+  const alerta = document.getElementById('log-alerta');
+  if(alerta) {
+    alerta.textContent = '';
+    alerta.className   = 'alerta-registro';
+  }
+
+  const email       = document.getElementById('log-email').value.trim().toLowerCase();
+  const contraseña = document.getElementById('log-contraseña').value;
+
+  if (!email) {
+    document.getElementById('log-email').classList.add('error-input');
+    document.getElementById('log-email').focus();
+    if(alerta) {
+      alerta.textContent = 'El email es obligatorio.';
+      alerta.className   = 'alerta-registro error';
+    }
+    return;
+  }
+  if (!contraseña) {
+    document.getElementById('log-contraseña').classList.add('error-input');
+    document.getElementById('log-contraseña').focus();
+    if(alerta) {
+      alerta.textContent = 'La contraseña es obligatoria.';
+      alerta.className   = 'alerta-registro error';
+    }
+    return;
+  }
+
+  const boton   = document.getElementById('btnLogin');
+  const texto   = document.getElementById('btn-login-texto');
+  const spinner = document.getElementById('log-spinner');
+  if(boton) boton.disabled = true;
+  if (texto)   texto.textContent     = 'Ingresando...';
+  if (spinner) spinner.style.display = 'block';
+
+  try {
+    const respuesta = await fetch(`${URL_BACKEND}/api/usuarios/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, contraseña }),
+    });
+
+    const datos = await respuesta.json();
+
+    if (respuesta.ok) {
+      const sesion = {
+        nombre:   datos.usuario?.nombre   || datos.nombre   || 'Usuario',
+        apellido: datos.usuario?.apellido || datos.apellido || '',
+        email:    datos.usuario?.email    || datos.email    || email,
+        id:       datos.usuario?._id      || datos.usuario?.id || datos.id || null,
+        avatar:   datos.usuario?.avatar   || datos.avatar   || null,
+        token:    datos.token || null,
+      };
+      localStorage.setItem('usuarioEquipYa', JSON.stringify(sesion));
+      actualizarAvatar();
+      actualizarBadgeChats(); // mostrar mensajes sin leer al iniciar sesión
+
+      if(alerta) {
+        alerta.textContent = `¡Bienvenido/a, ${sesion.nombre}!`;
+        alerta.className   = 'alerta-registro exito';
+      }
+      document.getElementById('log-email').value       = '';
+      document.getElementById('log-contraseña').value = '';
+      setTimeout(() => {
+        const modal = document.getElementById('loginModal');
+        if (modal) modal.classList.add('hidden');
+        window.location.reload();
+      }, 1200);
+
+    } else {
+      let mensaje;
+      if (respuesta.status === 404) {
+        mensaje = '¡Usuario no registrado! Chequeá el email o creá una cuenta.';
+        document.getElementById('log-email').classList.add('error-input');
+      } else if (respuesta.status === 401) {
+        mensaje = '¡Datos incorrectos! Verificá tu contraseña.';
+        document.getElementById('log-contraseña').classList.add('error-input');
+        document.getElementById('log-contraseña').value = '';
+      } else {
+        mensaje = datos.error || '¡Datos incorrectos!';
+      }
+      if(alerta) {
+        alerta.textContent = mensaje;
+        alerta.className   = 'alerta-registro error';
+      }
+    }
+
+  } catch (errorRed) {
+    console.error('Error de red en login:', errorRed);
+    if(alerta) {
+      alerta.textContent = 'No se pudo conectar con el servidor. ¿Está corriendo el backend en el puerto 3000?';
+      alerta.className   = 'alerta-registro error';
+    }
+  } finally {
+    if(boton) boton.disabled = false;
+    if (texto)   texto.textContent     = 'Ingresar';
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PANEL DE CONFIGURACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+
+function abrirConfiguracion() {
+  // Pre-llenar con datos del localStorage
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (raw) {
+      const u = JSON.parse(raw);
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      set('cfg-nombre',        u.nombre);
+      set('cfg-apellido',      u.apellido);
+      set('cfg-telefono',      u.telefono);
+      set('cfg-ubicacion-pref', u.ubicacionPreferida || '');
+
+      // Preview avatar en la sección Perfil
+      const circulo = document.getElementById('cfg-avatar-circulo');
+      const imgReal  = document.getElementById('cfg-avatar-img');
+      if (u.avatar) {
+        if (circulo) circulo.style.display = 'none';
+        if (imgReal)  { imgReal.style.display = 'block'; imgReal.src = `${URL_BACKEND}${u.avatar}`; }
+      } else {
+        if (circulo)  { circulo.style.display = 'flex'; circulo.textContent = (u.nombre || '?').charAt(0).toUpperCase(); }
+        if (imgReal)  imgReal.style.display = 'none';
+      }
+
+      const nombreEl = document.getElementById('cfg-preview-nombre');
+      const emailEl  = document.getElementById('cfg-preview-email');
+      if (nombreEl) nombreEl.textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim();
+      if (emailEl)  emailEl.textContent  = u.email || '';
+    }
+  } catch (err) { console.error('Error al abrir configuración:', err); }
+
+  // Limpiar alertas y campos de contraseña
+  ['alerta-cfg-perfil','alerta-cfg-ubicacion','alerta-cfg-seguridad'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ''; el.className = 'alerta-registro'; }
+  });
+  ['cfg-pass-actual','cfg-pass-nueva','cfg-pass-confirmar'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  setConfigTab('perfil');
+  document.getElementById('configuracionModal').classList.remove('hidden');
+}
+
+function cerrarConfiguracion() {
+  document.getElementById('configuracionModal').classList.add('hidden');
+}
+
+function setConfigTab(tab) {
+  ['perfil', 'ubicacion', 'seguridad'].forEach(t => {
+    document.getElementById(`config-sec-${t}`).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.config-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['perfil','ubicacion','seguridad'][i] === tab);
+  });
+}
+
+function previsualizarAvatarConfig(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const circulo = document.getElementById('cfg-avatar-circulo');
+    const imgReal  = document.getElementById('cfg-avatar-img');
+    if (circulo) circulo.style.display = 'none';
+    if (imgReal)  { imgReal.style.display = 'block'; imgReal.src = e.target.result; }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ── Sección 1: Datos de Contacto ──────────────────────────────────────────────
+async function guardarDatosContacto() {
+  const alerta  = document.getElementById('alerta-cfg-perfil');
+  const boton   = document.getElementById('btn-guardar-perfil-cfg');
+  const texto   = document.getElementById('txt-guardar-perfil-cfg');
+  const spinner = document.getElementById('spin-guardar-perfil-cfg');
+  alerta.textContent = ''; alerta.className = 'alerta-registro';
+
+  const idUsuario = _obtenerIdSesion();
+  if (!idUsuario) {
+    alerta.textContent = 'No se pudo identificar al usuario. Iniciá sesión nuevamente.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+
+  const formData = new FormData();
+  formData.append('nombre',   document.getElementById('cfg-nombre').value.trim());
+  formData.append('apellido', document.getElementById('cfg-apellido').value.trim());
+  formData.append('telefono', document.getElementById('cfg-telefono').value.trim());
+  const inputFile = document.getElementById('cfg-foto');
+  if (inputFile && inputFile.files[0]) formData.append('fotoPerfil', inputFile.files[0]);
+
+  boton.disabled = true; texto.textContent = 'Guardando...'; spinner.style.display = 'block';
+  try {
+    const res   = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, { method: 'PUT', body: formData });
+    const datos = await res.json();
+    if (res.ok) {
+      _actualizarSesionLocal(datos.usuario || datos);
+      actualizarAvatar();
+      alerta.textContent = '¡Datos actualizados correctamente!';
+      alerta.className   = 'alerta-registro exito';
+    } else {
+      alerta.textContent = datos.detalles ? datos.detalles.join(' · ') : (datos.error || 'Error al guardar.');
+      alerta.className   = 'alerta-registro error';
+    }
+  } catch {
+    alerta.textContent = 'No se pudo conectar con el servidor.';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    boton.disabled = false; texto.textContent = 'Guardar cambios'; spinner.style.display = 'none';
+  }
+}
+
+// ── Sección 2: Ubicación Preferida ────────────────────────────────────────────
+function buscarUbicacionConfig() {
+  const texto = document.getElementById('cfg-ubicacion-pref')?.value.trim() || '';
+  buscarEnNominatim(texto, 'cfg-sug-ubicacion');
+}
+
+async function obtenerUbicacionGPSConfig() {
+  if (!navigator.geolocation) { alert('Tu navegador no soporta geolocalización.'); return; }
+  const boton = document.querySelector('#config-sec-ubicacion .btn-gps');
+  const input = document.getElementById('cfg-ubicacion-pref');
+  if (boton) { boton.disabled = true; boton.textContent = '⏳'; }
+  if (input) input.placeholder = 'Obteniendo ubicación...';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const params = new URLSearchParams({ format:'json', lat: pos.coords.latitude, lon: pos.coords.longitude, countrycodes:'ar', addressdetails:'1' });
+        const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, { headers: { 'Accept-Language': 'es' } });
+        const data = await res.json();
+        const addr = data.address || {};
+        const ciudad  = addr.city || addr.town || addr.village || addr.municipality || '';
+        const partido = addr.county || '';
+        const prov    = addr.state || '';
+        const etiqueta = [ciudad || partido, prov].filter(Boolean).join(', ');
+        if (input) input.value = etiqueta || `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+      } catch {
+        if (input) input.value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+      } finally {
+        if (boton) { boton.disabled = false; boton.textContent = '🎯'; }
+        if (input) input.placeholder = 'Ej: Glew, Almirante Brown, Buenos Aires';
+      }
+    },
+    (err) => {
+      if (err.code === err.PERMISSION_DENIED) alert('Permiso de ubicación denegado.');
+      if (boton) { boton.disabled = false; boton.textContent = '🎯'; }
+      if (input) input.placeholder = 'Ej: Glew, Almirante Brown, Buenos Aires';
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+async function guardarUbicacionPreferida() {
+  const alerta  = document.getElementById('alerta-cfg-ubicacion');
+  const boton   = document.getElementById('btn-guardar-ubic-cfg');
+  const texto   = document.getElementById('txt-guardar-ubic-cfg');
+  const spinner = document.getElementById('spin-guardar-ubic-cfg');
+  alerta.textContent = ''; alerta.className = 'alerta-registro';
+
+  const idUsuario = _obtenerIdSesion();
+  if (!idUsuario) {
+    alerta.textContent = 'No se pudo identificar al usuario.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+
+  const ubicacion = document.getElementById('cfg-ubicacion-pref').value.trim();
+  boton.disabled = true; texto.textContent = 'Guardando...'; spinner.style.display = 'block';
+  try {
+    const res   = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ubicacionPreferida: ubicacion }),
+    });
+    const datos = await res.json();
+    if (res.ok) {
+      _actualizarSesionLocal({ ubicacionPreferida: ubicacion });
+      const el = document.getElementById('perfil-ubicacion-pref');
+      if (el) el.value = ubicacion;
+      alerta.textContent = '¡Ubicación guardada correctamente!';
+      alerta.className   = 'alerta-registro exito';
+    } else {
+      alerta.textContent = datos.error || 'Error al guardar.';
+      alerta.className   = 'alerta-registro error';
+    }
+  } catch {
+    alerta.textContent = 'No se pudo conectar con el servidor.';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    boton.disabled = false; texto.textContent = 'Guardar ubicación'; spinner.style.display = 'none';
+  }
+}
+
+// ── Sección 3: Seguridad ──────────────────────────────────────────────────────
+async function cambiarContrasena() {
+  const alerta  = document.getElementById('alerta-cfg-seguridad');
+  const boton   = document.getElementById('btn-cambiar-pass');
+  const texto   = document.getElementById('txt-cambiar-pass');
+  const spinner = document.getElementById('spin-cambiar-pass');
+  alerta.textContent = ''; alerta.className = 'alerta-registro';
+
+  const contraseñaActual    = document.getElementById('cfg-pass-actual').value;
+  const nuevaContrasena     = document.getElementById('cfg-pass-nueva').value;
+  const confirmarContrasena = document.getElementById('cfg-pass-confirmar').value;
+
+  if (!contraseñaActual || !nuevaContrasena || !confirmarContrasena) {
+    alerta.textContent = 'Completá todos los campos de contraseña.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+  if (nuevaContrasena !== confirmarContrasena) {
+    alerta.textContent = 'La nueva contraseña y su confirmación no coinciden.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+  if (nuevaContrasena.length < 6) {
+    alerta.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+
+  const idUsuario = _obtenerIdSesion();
+  if (!idUsuario) {
+    alerta.textContent = 'No se pudo identificar al usuario.';
+    alerta.className = 'alerta-registro error'; return;
+  }
+
+  boton.disabled = true; texto.textContent = 'Verificando...'; spinner.style.display = 'block';
+  try {
+    const res   = await fetch(`${URL_BACKEND}/api/usuarios/contrasena/${idUsuario}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contraseñaActual, nuevaContrasena, confirmarContrasena }),
+    });
+    const datos = await res.json();
+    if (res.ok) {
+      ['cfg-pass-actual','cfg-pass-nueva','cfg-pass-confirmar'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      alerta.textContent = '¡Contraseña actualizada correctamente!';
+      alerta.className   = 'alerta-registro exito';
+    } else {
+      alerta.textContent = datos.error || 'Error al cambiar la contraseña.';
+      alerta.className   = 'alerta-registro error';
+    }
+  } catch {
+    alerta.textContent = 'No se pudo conectar con el servidor.';
+    alerta.className   = 'alerta-registro error';
+  } finally {
+    boton.disabled = false; texto.textContent = 'Cambiar contraseña'; spinner.style.display = 'none';
+  }
+}
+
+async function eliminarCuenta() {
+  if (!confirm('⚠️ ¿Estás completamente seguro? Esta acción eliminará tu cuenta y todas tus publicaciones de forma permanente e irreversible.')) return;
+  if (!confirm('Última confirmación: ¿Querés eliminar tu cuenta definitivamente?')) return;
+
+  const idUsuario = _obtenerIdSesion();
+  if (!idUsuario) { alert('No se pudo identificar al usuario.'); return; }
+
+  try {
+    const res = await fetch(`${URL_BACKEND}/api/usuarios/${idUsuario}`, { method: 'DELETE' });
+    if (res.ok) {
+      localStorage.removeItem('usuarioEquipYa');
+      alert('Tu cuenta fue eliminada correctamente. ¡Hasta pronto!');
+      location.reload();
+    } else {
+      const datos = await res.json();
+      alert(datos.error || 'No se pudo eliminar la cuenta.');
+    }
+  } catch {
+    alert('Error de conexión al servidor.');
+  }
+}
+
+// ── Helpers privados ──────────────────────────────────────────────────────────
+function _obtenerIdSesion() {
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u.id || u._id || (u.usuario && (u.usuario._id || u.usuario.id)) || null;
+  } catch { return null; }
+}
+
+function _actualizarSesionLocal(camposNuevos) {
+  try {
+    const raw    = localStorage.getItem('usuarioEquipYa');
+    const sesion = raw ? JSON.parse(raw) : {};
+    localStorage.setItem('usuarioEquipYa', JSON.stringify({ ...sesion, ...camposNuevos }));
+  } catch { /* Fallback silencioso */ }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL DETALLE DE ARTÍCULO
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Cache en memoria: { id → objeto artículo } para abrir el detalle por ID
+const _cacheArticulos = {};
+
+function _guardarEnCache(item) {
+  const id = item._id || item.id;
+  if (id) _cacheArticulos[id] = item;
+}
+
+function abrirDetalleArticuloById(idStr) {
+  const item = _cacheArticulos[idStr];
+  if (item) {
+    _poblarDetalleModal(item);
+  } else {
+    // Fallback: fetch desde el backend
+    fetch(`${URL_BACKEND}/api/articulos/${idStr}`)
+      .then(r => r.json())
+      .then(data => _poblarDetalleModal(data.articulo || data))
+      .catch(() => alert('No se pudo cargar el detalle del artículo.'));
+  }
+}
+
+let _carruselIndice = 0;
+let _carruselImagenes = [];
+
+function _poblarDetalleModal(item) {
+  // ── Carrusel ────────────────────────────────────────────────────────────────
+  const carrusel   = document.getElementById('detalle-carrusel');
+  const placeholder = document.getElementById('detalle-placeholder');
+  const dotsWrap   = document.getElementById('carrusel-dots');
+  const prevBtn    = document.getElementById('carrusel-prev');
+  const nextBtn    = document.getElementById('carrusel-next');
+
+  // Limpiar imágenes previas
+  carrusel.querySelectorAll('.detalle-carrusel-img').forEach(el => el.remove());
+  dotsWrap.innerHTML = '';
+  _carruselIndice  = 0;
+
+  const imgs = (item.imagenes && item.imagenes.length > 0)
+    ? item.imagenes
+    : (item.imagen ? [item.imagen] : []);
+
+  _carruselImagenes = imgs;
+
+  if (imgs.length === 0) {
+    placeholder.style.display = 'flex';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  } else {
+    placeholder.style.display = 'none';
+    imgs.forEach((ruta, i) => {
+      const img = document.createElement('img');
+      img.src = `${URL_BACKEND}${ruta}`;
+      img.alt = item.titulo || 'Foto';
+      img.className = 'detalle-carrusel-img' + (i === 0 ? ' activa' : '');
+      carrusel.insertBefore(img, prevBtn);
+
+      const dot = document.createElement('button');
+      dot.className = 'carrusel-dot' + (i === 0 ? ' activo' : '');
+      dot.onclick = (e) => { e.stopPropagation(); irAFotoCarrusel(i); };
+      dotsWrap.appendChild(dot);
+    });
+    prevBtn.style.display = imgs.length > 1 ? 'flex' : 'none';
+    nextBtn.style.display = imgs.length > 1 ? 'flex' : 'none';
+  }
+
+  // ── Datos del artículo ───────────────────────────────────────────────────────
+  const isServicio = item.tipo === 'Servicio' || item.type === 'service';
+  const badgeEl = document.getElementById('detalle-tipo-badge');
+  badgeEl.textContent = isServicio ? '🛠️ Servicio' : '📦 Producto';
+  badgeEl.style.background = isServicio ? '#EFF6FF' : '#F0FDF4';
+  badgeEl.style.color      = isServicio ? '#2563EB' : '#16A34A';
+
+  document.getElementById('detalle-titulo').textContent = item.titulo || item.name || '—';
+  document.getElementById('detalle-precio-num').textContent = (item.precioBase || item.price || 0).toLocaleString('es-AR');
+  document.getElementById('detalle-tipo-cobro').textContent = ` / ${item.tipoCobro || 'día'}`;
+
+  const ratingEl = document.getElementById('detalle-rating-num');
+  ratingEl.textContent = (item.vendedor?.promedioValoracion || item.rating || 0).toFixed(1);
+
+  // Tags de categoría y ubicación
+  const tagsEl = document.getElementById('detalle-tags');
+  tagsEl.innerHTML = '';
+  const tags = [
+    item.categoria  ? `📂 ${item.categoria}` : null,
+    item.localidad  ? `📍 ${item.localidad}` : null,
+    item.partido    ? `🗺️ ${item.partido}` : null,
+    (isServicio && item.precioServicio) ? `🛠️ Servicio $${item.precioServicio?.toLocaleString('es-AR')}` : null,
+  ].filter(Boolean);
+  tags.forEach(t => {
+    const span = document.createElement('span');
+    span.className = 'detalle-tag';
+    span.textContent = t;
+    tagsEl.appendChild(span);
+  });
+
+  // Descripción
+  const descEl = document.getElementById('detalle-descripcion');
+  if (item.descripcion && item.descripcion.trim()) {
+    descEl.textContent = item.descripcion;
+    descEl.style.display = 'block';
+  } else {
+    descEl.style.display = 'none';
+  }
+
+  // ── Vendedor ─────────────────────────────────────────────────────────────────
+  const vendedorNom = item.vendedor?.nombre || 'Vendedor';
+  const vendedorAvatar = item.vendedor?.avatar ? `${URL_BACKEND}${item.vendedor.avatar}` : null;
+
+  const avatarWrap = document.getElementById('detalle-avatar-wrap');
+  if (vendedorAvatar) {
+    avatarWrap.innerHTML = `<img src="${vendedorAvatar}" alt="${vendedorNom}"
+      style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="avatar" style="width:44px;height:44px;font-size:16px;background:${getColor(vendedorNom)};display:none;">${getInitials(vendedorNom)}</div>`;
+  } else {
+    avatarWrap.innerHTML = `<div class="avatar" style="width:44px;height:44px;font-size:16px;background:${getColor(vendedorNom)}">${getInitials(vendedorNom)}</div>`;
+  }
+
+  document.getElementById('detalle-vendedor-nombre').textContent = vendedorNom;
+  document.getElementById('detalle-vendedor-rep').textContent    = (item.vendedor?.promedioValoracion || item.vendedor?.reputacion || 0).toFixed(1);
+
+  // Guardar referencia del artículo actual para el botón "Chatear"
+  _detalleArticuloActual = item;
+
+  document.getElementById('detalleArticuloModal').classList.remove('hidden');
+}
+
+function cerrarDetalleArticulo() {
+  document.getElementById('detalleArticuloModal').classList.add('hidden');
+}
+
+function moverCarrusel(direccion) {
+  if (_carruselImagenes.length === 0) return;
+  irAFotoCarrusel((_carruselIndice + direccion + _carruselImagenes.length) % _carruselImagenes.length);
+}
+
+function irAFotoCarrusel(idx) {
+  const imgs = document.querySelectorAll('.detalle-carrusel-img');
+  const dots = document.querySelectorAll('.carrusel-dot');
+  imgs.forEach((img, i) => img.classList.toggle('activa', i === idx));
+  dots.forEach((dot, i) => dot.classList.toggle('activo', i === idx));
+  _carruselIndice = idx;
+}
+
+// Artículo que está abierto en el modal de detalle
+let _detalleArticuloActual = null;
+
+// iniciarChatDesdeDetalle(): definida en el módulo de chats
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MÓDULO DE CHATS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Badge de notificaciones en el avatar ─────────────────────────────────────
+/**
+ * Consulta GET /api/chats?soloSinLeer=true para obtener la cantidad de
+ * conversaciones con mensajes sin leer y actualiza el badge del navbar.
+ * Se llama al inicio y cada vez que llega un mensaje nuevo.
+ */
+async function actualizarBadgeChats() {
+  const sesion = _chatObtenerSesion?.();
+  if (!sesion) return;
+  try {
+    const params = new URLSearchParams({ usuarioId: sesion.id, soloSinLeer: 'true' });
+    const res  = await fetch(`${URL_BACKEND}/api/chats?${params}`);
+    if (!res.ok) return;
+    const data  = await res.json();
+    const total = data.total || 0;
+    const badge = document.getElementById('avatar-badge-chats');
+    if (!badge) return;
+    if (total > 0) {
+      badge.textContent = total > 99 ? '99+' : total;
+      badge.classList.remove('oculto');
+    } else {
+      badge.classList.add('oculto');
+    }
+  } catch { /* silencioso */ }
+}
+
+// Estado del módulo
+let _chatConvActual    = null;  // conversación seleccionada
+let _chatSoloSinLeer   = false; // filtro activo
+let _chatPollingTimer  = null;  // ID del setInterval de polling
+let _chatUltimoMsgId   = null;  // último _id recibido (para saber si hay nuevos)
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function _chatObtenerSesion() {
+  try {
+    const raw = localStorage.getItem('usuarioEquipYa');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    const id = u.id || u._id || (u.usuario && (u.usuario._id || u.usuario.id));
+    return id ? { id, ...u } : null;
+  } catch { return null; }
+}
+
+function _chatFecha(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const hoy = new Date();
+  const esHoy = d.toDateString() === hoy.toDateString();
+  return esHoy
+    ? d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+}
+
+function _chatAvatarHTML(nombre, avatar, tam = 40) {
+  if (avatar) {
+    return `<img src="${URL_BACKEND}${avatar}" alt="${nombre}"
+      class="conv-avatar" style="width:${tam}px;height:${tam}px;"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="conv-avatar-ini" style="width:${tam}px;height:${tam}px;background:${getColor(nombre)};display:none;">${getInitials(nombre)}</div>`;
+  }
+  return `<div class="conv-avatar-ini" style="width:${tam}px;height:${tam}px;background:${getColor(nombre)};">${getInitials(nombre)}</div>`;
+}
+
+// ── Navegar a la vista de chats ───────────────────────────────────────────────
+function irAChats() {
+  cerrarMenuPerfil();
+  document.getElementById('view-feed-global').classList.add('hidden');
+  document.getElementById('view-mis-publicaciones').classList.add('hidden');
+  document.getElementById('view-chats').classList.remove('hidden');
+  cargarConversaciones();
+  _iniciarPollingConversaciones();
+}
+
+function _salirDeChats() {
+  _detenerPolling();
+  document.getElementById('view-chats').classList.add('hidden');
+}
+
+// ── Cargar lista de conversaciones ────────────────────────────────────────────
+async function cargarConversaciones() {
+  const sesion = _chatObtenerSesion();
+  if (!sesion) return;
+
+  try {
+    const params = new URLSearchParams({ usuarioId: sesion.id });
+    if (_chatSoloSinLeer) params.set('soloSinLeer', 'true');
+    const res  = await fetch(`${URL_BACKEND}/api/chats?${params}`);
+    const data = await res.json();
+
+    _renderizarListaConversaciones(data.conversaciones || []);
+    actualizarBadgeChats();   // sincroniza el badge del navbar
+  } catch (err) {
+    console.error('Error cargando conversaciones:', err);
+  }
+}
+
+function _renderizarListaConversaciones(convs) {
+  const lista  = document.getElementById('chats-lista');
+  const empty  = document.getElementById('chats-empty');
+
+  // Limpiar items previos (no el empty)
+  lista.querySelectorAll('.conv-item').forEach(el => el.remove());
+
+  if (!convs.length) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  convs.forEach(conv => {
+    const nombre    = conv.contraparte.nombre;
+    const ultimo    = conv.ultimoMensaje;
+    const sinLeer   = conv.sinLeer || 0;
+    const claveId   = `conv-${conv.clave.replace(/[^a-z0-9]/gi, '_')}`;
+
+    const div = document.createElement('div');
+    div.className = 'conv-item' + (_chatConvActual?.clave === conv.clave ? ' activa' : '');
+    div.id = claveId;
+    div.innerHTML = `
+      ${_chatAvatarHTML(nombre, conv.contraparte.avatar, 40)}
+      <div class="conv-info">
+        <div class="conv-nombre">${nombre}</div>
+        <div class="conv-preview">${ultimo?.texto ? (ultimo.texto.length > 38 ? ultimo.texto.slice(0,38)+'…' : ultimo.texto) : ''}</div>
+        ${conv.tituloArticulo ? `<div class="conv-preview" style="color:#aaa;font-size:10px;">📦 ${conv.tituloArticulo}</div>` : ''}
+      </div>
+      <div class="conv-meta">
+        <div class="conv-hora">${_chatFecha(ultimo?.enviadoEn)}</div>
+        <div class="conv-badge ${sinLeer > 0 ? 'visible' : ''}">${sinLeer}</div>
+      </div>
+    `;
+    div.addEventListener('click', () => abrirConversacion(conv));
+    lista.appendChild(div);
+  });
+}
+
+// ── Abrir conversación activa ─────────────────────────────────────────────────
+async function abrirConversacion(conv) {
+  _chatConvActual = conv;
+  const sesion = _chatObtenerSesion();
+  if (!sesion) return;
+
+  // Marcar item como activo
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('activa'));
+  const claveId = `conv-${conv.clave.replace(/[^a-z0-9]/gi, '_')}`;
+  document.getElementById(claveId)?.classList.add('activa');
+
+  // Mostrar la ventana activa
+  document.getElementById('chat-placeholder').style.display = 'none';
+  const ventana = document.getElementById('chat-ventana-activa');
+  ventana.style.display = 'flex';
+
+  // Header
+  document.getElementById('chat-ventana-nombre').textContent   = conv.contraparte.nombre;
+  document.getElementById('chat-ventana-articulo').textContent = conv.tituloArticulo
+    ? `📦 ${conv.tituloArticulo}` : '';
+  document.getElementById('chat-ventana-avatar-wrap').innerHTML =
+    _chatAvatarHTML(conv.contraparte.nombre, conv.contraparte.avatar, 36);
+
+  await _cargarMensajesConversacion(sesion.id, conv.contraparte.id, conv.articuloId);
+  document.getElementById('chat-input-msg').focus();
+}
+
+async function _cargarMensajesConversacion(usuarioId, contraparteId, articuloId) {
+  try {
+    const params = new URLSearchParams({ usuarioId, contraparteId });
+    if (articuloId) params.set('articuloId', articuloId);
+    const res  = await fetch(`${URL_BACKEND}/api/chats/mensajes?${params}`);
+    const data = await res.json();
+    _renderizarMensajes(data.mensajes || [], usuarioId);
+    // Actualizar badge en la lista
+    cargarConversaciones();
+  } catch (err) {
+    console.error('Error cargando mensajes:', err);
+  }
+}
+
+function _renderizarMensajes(mensajes, miId) {
+  const contenedor = document.getElementById('chat-mensajes');
+  contenedor.innerHTML = '';
+
+  if (!mensajes.length) {
+    contenedor.innerHTML = '<div style="text-align:center;color:#CCC;font-size:12px;margin-top:20px;">Aún no hay mensajes en esta conversación.</div>';
+    return;
+  }
+
+  mensajes.forEach(msg => {
+    const esEnviado = msg.emisor?.toString() === miId || msg.emisor?._id?.toString() === miId;
+    const burbuja   = document.createElement('div');
+    burbuja.className = `msg-burbuja ${esEnviado ? 'msg-enviado' : 'msg-recibido'}`;
+    burbuja.innerHTML = `
+      ${msg.texto}
+      <span class="msg-hora">${_chatFecha(msg.enviadoEn)}${esEnviado && msg.leido ? ' ✓✓' : ''}</span>
+    `;
+    contenedor.appendChild(burbuja);
+  });
+
+  // Scroll al final
+  contenedor.scrollTop = contenedor.scrollHeight;
+}
+
+// ── Enviar mensaje ────────────────────────────────────────────────────────────
+async function enviarMensajeChat() {
+  if (!_chatConvActual) return;
+  const sesion = _chatObtenerSesion();
+  if (!sesion) { alert('Necesitás iniciar sesión.'); return; }
+
+  const input = document.getElementById('chat-input-msg');
+  const texto = input.value.trim();
+  if (!texto) return;
+
+  input.value = '';
+  input.disabled = true;
+
+  try {
+    const body = {
+      emisorId:       sesion.id,
+      receptorId:     _chatConvActual.contraparte.id,
+      texto,
+      articuloId:     _chatConvActual.articuloId || undefined,
+      tituloArticulo: _chatConvActual.tituloArticulo || undefined,
+    };
+
+    const res = await fetch(`${URL_BACKEND}/api/chats`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      await _cargarMensajesConversacion(sesion.id, _chatConvActual.contraparte.id, _chatConvActual.articuloId);
+      actualizarBadgeChats();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Error al enviar el mensaje.');
+    }
+  } catch {
+    alert('No se pudo conectar con el servidor.');
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// ── Filtro sin leer ───────────────────────────────────────────────────────────
+function filtrarConversaciones(soloSinLeer) {
+  _chatSoloSinLeer = soloSinLeer;
+  document.getElementById('btn-filtro-todos').classList.toggle('activo',    !soloSinLeer);
+  document.getElementById('btn-filtro-sinleer').classList.toggle('activo',  soloSinLeer);
+  cargarConversaciones();
+}
+
+// ── Polling: refresca conversaciones cada 5 segundos ──────────────────────────
+function _iniciarPollingConversaciones() {
+  _detenerPolling();
+  _chatPollingTimer = setInterval(async () => {
+    await cargarConversaciones();
+    // Si hay una conversación abierta, refrescar los mensajes también
+    if (_chatConvActual) {
+      const sesion = _chatObtenerSesion();
+      if (sesion) {
+        await _cargarMensajesConversacion(
+          sesion.id,
+          _chatConvActual.contraparte.id,
+          _chatConvActual.articuloId
+        );
+      }
+    }
+  }, 5000);
+}
+
+function _detenerPolling() {
+  if (_chatPollingTimer) { clearInterval(_chatPollingTimer); _chatPollingTimer = null; }
+}
+
+// ── Iniciar chat desde el modal de detalle del artículo ───────────────────────
+function iniciarChatDesdeDetalle() {
+  if (!_detalleArticuloActual) return;
+  cerrarDetalleArticulo();
+
+  const sesion = _chatObtenerSesion();
+  if (!sesion) { abrirModalLogin(); return; }
+
+  const vendedor = _detalleArticuloActual.vendedor;
+  if (!vendedor?._id || vendedor._id === sesion.id) {
+    alert('No podés chatear con vos mismo.');
+    return;
+  }
+
+  // Construir la conversación sintética para abrir directamente la ventana
+  const convSintetica = {
+    clave: [sesion.id, vendedor._id].sort().join('_') + '|' + (_detalleArticuloActual._id || 'sin-articulo'),
+    contraparte: {
+      id:     vendedor._id,
+      nombre: vendedor.nombre,
+      avatar: vendedor.avatar || null,
+    },
+    articuloId:     _detalleArticuloActual._id || null,
+    tituloArticulo: _detalleArticuloActual.titulo || null,
+    ultimoMensaje:  null,
+    sinLeer: 0,
+  };
+
+  irAChats();
+  // Pequeño delay para que la vista cargue antes de abrir la conversación
+  setTimeout(() => abrirConversacion(convSintetica), 300);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MÓDULO MAPA INTERACTIVO (Leaflet)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const _SEDE_FACULTAD_LAT = -34.6176;
+const _SEDE_FACULTAD_LNG = -58.3683;
+const _GBA_LAT = -34.6300;
+const _GBA_LNG = -58.3800;
+
+let _mapaLeaflet = null;       // instancia Leaflet
+let _capaMarcadores = null;    // LayerGroup para los pines de artículos
+let _timerBuscarZona  = null;   // debounce para autocomplete de zona
+let _pinUsuarioMapa  = null;   // marcador del punto elegido por clic manual
+
+// ── Estado compartido de filtros del aside ─────────────────────────────────
+let _filtroZonaLat  = null;   // lat de la zona seleccionada (Nominatim)
+let _filtroZonaLng  = null;   // lng de la zona seleccionada
+let _filtroRadioKm  = null;   // radio activo en km (2, 5 o 10)
+
+// ── Calcula bounding box rectangular a partir de (lat, lng, radioKm) ──────
+// Usa la fórmula de grados → km para lat/lng en la región GBA.
+// No es un círculo perfecto pero es suficientemente preciso para 50 km máx.
+function _calcularBoundingBox(lat, lng, radioKm) {
+  const GRAD_X_KM_LAT = 111.32;                             // km por grado de latitud (constante)
+  const GRAD_X_KM_LNG = 111.32 * Math.cos(lat * Math.PI / 180); // varía con la latitud
+  const deltaLat = radioKm / GRAD_X_KM_LAT;
+  const deltaLng = radioKm / GRAD_X_KM_LNG;
+  return {
+    minLat: (lat - deltaLat).toFixed(6),
+    maxLat: (lat + deltaLat).toFixed(6),
+    minLng: (lng - deltaLng).toFixed(6),
+    maxLng: (lng + deltaLng).toFixed(6),
+  };
+}
+
+// ── Maneja clic en botón de rango de km ───────────────────────────────────
+function seleccionarRadio(btn, km) {
+  // Toggle: si ya estaba activo, desactivar
+  if (btn.classList.contains('activo')) {
+    btn.classList.remove('activo');
+    _filtroRadioKm = null;
+    return;
+  }
+  document.querySelectorAll('.km-btn').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  _filtroRadioKm = km;
+}
+
+// ── Actualiza los labels del slider de precio en tiempo real ─────────────
+function actualizarSliderPrecio() {
+  const min = parseInt(document.getElementById('precio-min')?.value || '0');
+  const max = parseInt(document.getElementById('precio-max')?.value || '50000');
+  const fill = document.getElementById('range-fill-bar');
+  const labelMin = document.getElementById('precio-min-label');
+  const labelMax = document.getElementById('precio-max-label');
+
+  const pct = v => Math.round(v / 50000 * 100);
+  const fmt = v => '$' + v.toLocaleString('es-AR');
+
+  if (labelMin) labelMin.textContent = fmt(min);
+  if (labelMax) labelMax.textContent = fmt(max);
+  if (fill) {
+    fill.style.left  = pct(Math.min(min, max)) + '%';
+    fill.style.right = (100 - pct(Math.max(min, max))) + '%';
+  }
+}
+
+// ── Recolecta todos los filtros del aside y dispara renderFeed ────────────
+function aplicarFiltros() {
+  renderFeed();
+}
+
+// ── Inicializar el mapa ─────────────────────────────────────────────────────
+function inicializarMapa() {
+  // Guardia: si Leaflet no cargó (CDN caído, offline), mostrar fallback
+  if (typeof L === 'undefined') {
+    console.warn('[Mapa] Leaflet no está disponible. El mapa no se inicializará.');
+    const cont = document.getElementById('mapa-leaflet');
+    if (cont) {
+      cont.style.display = 'flex';
+      cont.style.alignItems = 'center';
+      cont.style.justifyContent = 'center';
+      cont.style.background = '#F0F4F8';
+      cont.style.color = '#888';
+      cont.style.fontSize = '12px';
+      cont.innerHTML = '<span>🗺️ Mapa no disponible sin conexión</span>';
+    }
+    return;
+  }
+  try {
+    const contenedor = document.getElementById('mapa-leaflet');
+    if (!contenedor || _mapaLeaflet) return;
+
+    _mapaLeaflet = L.map('mapa-leaflet', {
+      zoomControl: true,
+      attributionControl: false,
+    }).setView([_GBA_LAT, _GBA_LNG], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+    }).addTo(_mapaLeaflet);
+
+    _capaMarcadores = L.layerGroup().addTo(_mapaLeaflet);
+
+    // ── Clic manual sobre el mapa ─────────────────────────────────────────
+    _mapaLeaflet.on('click', async function(evento) {
+      const lat = evento.latlng.lat;
+      const lng = evento.latlng.lng;
+
+      // 1. Mover o crear el pin de "Mi ubicación"
+      _actualizarPinUsuario(lat, lng);
+
+      // 2. Guardar coords en el estado de filtros (para los km-btns)
+      _filtroZonaLat = lat;
+      _filtroZonaLng = lng;
+
+      // 3. Poner texto provisional en el input mientras carga Nominatim
+      const inputZona = document.getElementById('zona-buscar');
+      if (inputZona) inputZona.value = '📍 Cargando dirección...';
+
+      // 4. Geocodificación inversa con Nominatim
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=es`;
+        const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+        if (resp.ok) {
+          const geo = await resp.json();
+          // Armar etiqueta legible: "Calle Número, Localidad"
+          const addr  = geo.address || {};
+          const calle = addr.road || addr.pedestrian || addr.footway || '';
+          const num   = addr.house_number ? ` ${addr.house_number}` : '';
+          const loc   = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.city || '';
+          const label = [calle + num, loc].filter(Boolean).join(', ') || geo.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          if (inputZona) inputZona.value = label;
+        } else {
+          if (inputZona) inputZona.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+      } catch (errGeo) {
+        console.warn('[Mapa] Geocodificación inversa falló:', errGeo);
+        if (inputZona) inputZona.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }
+    });
+
+    // Forzar recálculo de tamaño: el aside con position:sticky puede medirse tarde
+    setTimeout(() => {
+      try { _mapaLeaflet.invalidateSize(); } catch(e) {}
+    }, 250);
+
+  } catch (error) {
+    console.error('[Mapa] Error al inicializar Leaflet:', error);
+  }
+}
+
+// ── Pin de ubicación del usuario (clic manual) ────────────────────────────
+function _actualizarPinUsuario(lat, lng) {
+  if (!_mapaLeaflet) return;
+
+  const iconoUsuario = L.divIcon({
+    html: `<div style="
+      width:22px; height:22px;
+      background:#111; border:3px solid #E2FF00;
+      border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.45);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; color:#E2FF00; font-weight:900;
+    ">📍</div>`,
+    iconSize: [22, 22], iconAnchor: [11, 11], className: '',
+  });
+
+  if (_pinUsuarioMapa) {
+    _pinUsuarioMapa.setLatLng([lat, lng]);
+  } else {
+    _pinUsuarioMapa = L.marker([lat, lng], { icon: iconoUsuario, zIndexOffset: 1000 })
+      .addTo(_mapaLeaflet)
+      .bindPopup('<b>Tu ubicación elegida</b><br><small>Usá los botones km para filtrar.</small>');
+  }
+  _pinUsuarioMapa.openPopup();
+}
+
+// ── Ir a la Sede Facultad ───────────────────────────────────────────────────
+function irASedeFactultad() {
+  if (!_mapaLeaflet) return;
+  _mapaLeaflet.setView([_SEDE_FACULTAD_LAT, _SEDE_FACULTAD_LNG], 16, { animate: true });
+
+  // Pin de la sede si no existe todavía
+  if (!_mapaLeaflet._pinSede) {
+    const iconoSede = L.divIcon({
+      html: '<div style="background:#E2FF00;border:2px solid #111;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.3);">🎓</div>',
+      iconSize: [28, 28], iconAnchor: [14, 14], className: '',
+    });
+    _mapaLeaflet._pinSede = L.marker([_SEDE_FACULTAD_LAT, _SEDE_FACULTAD_LNG], { icon: iconoSede })
+      .addTo(_mapaLeaflet)
+      .bindPopup('<div style="font-size:12px;font-weight:700;text-align:center;">🎓 Sede Facultad<br><span style="font-weight:400;color:#666;">Paseo Colón, CABA</span></div>')
+      .openPopup();
+  } else {
+    _mapaLeaflet._pinSede.openPopup();
+  }
+}
+
+// ── Actualizar marcadores de artículos en el mapa ──────────────────────────
+function actualizarMarcadoresArticulos(articulos) {
+  try {
+    if (!_mapaLeaflet || !_capaMarcadores) return;
+    _capaMarcadores.clearLayers();
+
+    const URL_BACK = typeof URL_BACKEND !== 'undefined' ? URL_BACKEND : '';
+
+    (articulos || []).forEach(art => {
+      try {
+        const lat = parseFloat(art.latitud);
+        const lng = parseFloat(art.longitud);
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+        // Fallback estricto: imagenes[] → imagen (string viejo) → default
+        let fotoPin = (art.imagenes && art.imagenes.length > 0)
+          ? art.imagenes[0]
+          : (art.imagen || null);
+
+        const imgTag = fotoPin
+          ? `<img src="${URL_BACK}${fotoPin}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+               style="width:54px;height:54px;object-fit:cover;border-radius:50%;border:2px solid #E2FF00;display:block;margin:0 auto 6px;">
+             <div style="width:54px;height:54px;border-radius:50%;background:#E8EEF4;border:2px solid #E2FF00;align-items:center;justify-content:center;margin:0 auto 6px;font-size:22px;display:none;">📦</div>`
+          : `<div style="width:54px;height:54px;border-radius:50%;background:#E8EEF4;border:2px solid #E2FF00;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:22px;">📦</div>`;
+
+        const precio = typeof art.precio === 'number' ? art.precio.toLocaleString('es-AR') : (art.precio || 0);
+
+        const popup = `
+          <div style="text-align:center;min-width:90px;max-width:140px;font-family:inherit;">
+            ${imgTag}
+            <div style="font-size:11px;font-weight:700;color:#111;line-height:1.3;word-break:break-word;">${art.titulo || 'Sin título'}</div>
+            <div style="font-size:11px;color:#555;margin-top:2px;">$${precio}</div>
+          </div>`;
+
+        const iconoPin = L.divIcon({
+          html: '<div style="width:14px;height:14px;background:#E2FF00;border:2.5px solid #111;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.35);"></div>',
+          iconSize: [14, 14], iconAnchor: [7, 7], className: '',
+        });
+
+        L.marker([lat, lng], { icon: iconoPin })
+          .addTo(_capaMarcadores)
+          .bindPopup(popup, { maxWidth: 160, minWidth: 110 });
+
+      } catch (errPin) {
+        console.warn('[Mapa] Falló el pin de un artículo:', errPin);
+      }
+    });
+
+  } catch (error) {
+    console.error('[Mapa] Error en actualizarMarcadoresArticulos:', error);
+  }
+}
+
+// ── Autocomplete de zona con Nominatim + panTo ─────────────────────────────
+function buscarZonaMapa() {
+  clearTimeout(_timerBuscarZona);
+  const texto = document.getElementById('zona-buscar')?.value.trim() || '';
+  const listado = document.getElementById('zona-sugerencias');
+  if (!listado) return;
+  if (texto.length < 3) { listado.style.display = 'none'; return; }
+
+  _timerBuscarZona = setTimeout(async () => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(texto + ', Buenos Aires, Argentina')}&limit=5&countrycodes=ar&viewbox=-59.5,-34.0,-57.5,-35.5&bounded=1`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const resultados = await res.json();
+
+      if (!resultados.length) { listado.style.display = 'none'; return; }
+
+      listado.innerHTML = resultados.map(r => {
+        const label = r.display_name.split(',').slice(0, 3).join(', ');
+        return `<div onclick="_seleccionarZona(${r.lat}, ${r.lon}, '${label.replace(/'/g, "&#39;")}')"
+          style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0;color:#111;"
+          onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''">${label}</div>`;
+      }).join('');
+      listado.style.display = 'block';
+    } catch { listado.style.display = 'none'; }
+  }, 400);
+}
+
+function _seleccionarZona(lat, lng, label) {
+  const input = document.getElementById('zona-buscar');
+  const listado = document.getElementById('zona-sugerencias');
+  if (input)  input.value = label;
+  if (listado) listado.style.display = 'none';
+
+  // Guardar coords para el filtro de distancia
+  _filtroZonaLat = parseFloat(lat);
+  _filtroZonaLng = parseFloat(lng);
+
+  if (_mapaLeaflet) {
+    _mapaLeaflet.setView([_filtroZonaLat, _filtroZonaLng], 14, { animate: true });
+  }
+}
+
+// Cerrar sugerencias al hacer click fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('#zona-buscar') && !e.target.closest('#zona-sugerencias')) {
+    const listado = document.getElementById('zona-sugerencias');
+    if (listado) listado.style.display = 'none';
+  }
+});
+
+init();
+actualizarAvatar();
+</script>
+
+<div class="modal-overlay hidden" id="registroModal" onclick="cerrarRegistro(event)">
+  <div class="registro-modal" onclick="event.stopPropagation()">
+    <div class="registro-header">
+      <div class="registro-logo">Equip<span>Ya</span></div>
+    </div>
+    <div class="registro-titulo">Crear cuenta</div>
+    <div class="registro-sub">Unite gratis y empezá a alquilar o publicar herramientas.</div>
+    <div class="registro-fila">
+      <div class="campo-grupo">
+        <label for="reg-nombre">Nombre</label>
+        <input type="text" id="reg-nombre" placeholder="Juan" autocomplete="given-name"/>
+      </div>
+      <div class="campo-grupo">
+        <label for="reg-apellido">Apellido</label>
+        <input type="text" id="reg-apellido" placeholder="García" autocomplete="family-name"/>
+      </div>
+    </div>
+    <div class="campo-grupo">
+      <label for="reg-email">Email</label>
+      <input type="email" id="reg-email" placeholder="juan@ejemplo.com" autocomplete="email"/>
+    </div>
+    <div class="campo-grupo">
+      <label for="reg-contrasena">Contraseña <span style="color:#999;font-weight:400">(mínimo 6 caracteres)</span></label>
+      <input type="password" id="reg-contrasena" placeholder="••••••••" autocomplete="new-password"/>
+    </div>
+    <button class="btn-registrarse" id="btnRegistrarse" onclick="enviarRegistro()">
+      <span id="btn-texto">Crear cuenta</span>
+      <div class="spinner" id="reg-spinner"></div>
+    </button>
+    <div class="alerta-registro" id="reg-alerta"></div>
+    <div class="registro-pie">
+      ¿Ya tenés cuenta? <a onclick="abrirModalLogin()">Iniciá sesión</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="loginModal" onclick="if(event.target.id==='loginModal') cerrarModalLogin()">
+  <div class="registro-modal" onclick="event.stopPropagation()">
+    <div class="registro-header">
+      <div class="registro-logo">Equip<span>Ya</span></div>
+    </div>
+    <div class="registro-titulo">Iniciar Sesion</div>
+    <div class="registro-sub">Ingresa para alquilar o publicar.</div>
+    <div class="campo-grupo">
+      <label for="log-email">Email</label>
+      <input type="email" id="log-email" placeholder="juan@ejemplo.com"/>
+    </div>
+    <div class="campo-grupo">
+      <label for="log-contraseña">Contraseña</label>
+      <input type="password" id="log-contraseña" placeholder="••••••••"/>
+    </div>
+    <button class="btn-registrarse" id="btnLogin" onclick="enviarLogin()">
+      <span id="btn-login-texto">Ingresar</span>
+      <div class="spinner" id="log-spinner"></div>
+    </button>
+    <div class="alerta-registro" id="log-alerta"></div>
+    <div class="registro-pie">
+      ¿No tenes cuenta? <a onclick="cerrarModalLogin(); abrirModalRegistro()">Registrate gratis</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="perfilModal" onclick="if(event.target.id==='perfilModal') cerrarPerfilModal()">
+  <div class="perfil-modal" onclick="event.stopPropagation()">
+
+    <div class="perfil-modal-header">
+      <div class="perfil-modal-titulo">Mi Perfil</div>
+      <button class="perfil-modal-cerrar" onclick="cerrarPerfilModal()" title="Cerrar">&times;</button>
+    </div>
+
+    <div class="perfil-avatar-preview">
+      <div class="perfil-avatar-contenedor-imagen">
+        <div class="perfil-avatar-circulo" id="perfil-avatar-circulo">?</div>
+        <img class="perfil-avatar-img-real" id="perfil-avatar-img-real" src="" alt="Avatar real" style="display: none;"/>
+      </div>
+      <div class="perfil-avatar-info">
+        <div class="perfil-avatar-nombre" id="perfil-preview-nombre">—</div>
+        <div class="perfil-avatar-email"  id="perfil-preview-email">—</div>
+      </div>
+    </div>
+
+    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:16px;">
+      ✏️ Para editar tus datos, usá la sección <strong>Configuración</strong> del menú de perfil.
+    </div>
+    <div class="perfil-seccion-titulo">Datos personales</div>
+    <div class="perfil-fila">
+      <div class="campo-grupo">
+        <label for="perfil-nombre">Nombre</label>
+        <input type="text" id="perfil-nombre" placeholder="—" disabled/>
+      </div>
+      <div class="campo-grupo">
+        <label for="perfil-apellido">Apellido</label>
+        <input type="text" id="perfil-apellido" placeholder="—" disabled/>
+      </div>
+    </div>
+    <div class="campo-grupo">
+      <label for="perfil-email">Email</label>
+      <input type="email" id="perfil-email" placeholder="—" disabled/>
+    </div>
+    <div class="perfil-seccion-titulo">Contacto y ubicación</div>
+    <div class="campo-grupo">
+      <label for="perfil-telefono">Teléfono</label>
+    <input type="tel" id="perfil-telefono" placeholder="—" disabled/>
+    </div>
+    <div class="campo-grupo">
+      <label>Ubicación preferida</label>
+      <input type="text" id="perfil-ubicacion-pref" placeholder="—" disabled/>
+    </div>
+    <button type="button" class="btn-registrarse" onclick="cerrarPerfilModal(); irAConfiguracion()" style="margin-top:8px;">
+      ⚙️ Ir a Configuración para editar
+    </button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="editArticuloModal" onclick="if(event.target.id==='editArticuloModal') cerrarModalEdicionArticulo()">
+  <div class="upload-modal" onclick="event.stopPropagation()">
+    <div class="upload-title">Editar publicación</div>
+    <div class="upload-sub">Modificá el contenido de tu herramienta o servicio</div>
+    <form onsubmit="guardarEdicionArticulo(event)">
+      <label class="field-lbl">Nombre / Título</label>
+      <input class="field-inp" id="edit-art-nombre" type="text" required />
+      <label class="field-lbl">Precio por día o visita</label>
+      <input class="field-inp" id="edit-art-precio" type="number" required />
+      <button type="submit" class="btn-publish" style="background:#E2FF00; color:#111; font-weight:800;">Guardar cambios</button>
+      <button type="button" class="btn-publish" style="background:#F0F0F0; color:#111; font-weight:700; margin-top:8px;" onclick="cerrarModalEdicionArticulo()">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- MODAL CONFIGURACIÓN                                 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="configuracionModal" onclick="if(event.target.id==='configuracionModal') cerrarConfiguracion()">
+  <div class="config-modal" onclick="event.stopPropagation()">
+
+    <div class="config-header">
+      <div class="config-header-titulo">⚙️ Configuración</div>
+      <button class="perfil-modal-cerrar" onclick="cerrarConfiguracion()">&times;</button>
+    </div>
+
+    <div class="config-tabs">
+      <button class="config-tab active" onclick="setConfigTab('perfil')">👤 Mi Perfil</button>
+      <button class="config-tab"        onclick="setConfigTab('ubicacion')">📍 Ubicación</button>
+      <button class="config-tab"        onclick="setConfigTab('seguridad')">🔒 Seguridad</button>
+    </div>
+
+    <!-- Sección 1: Datos de Contacto -->
+    <div id="config-sec-perfil" class="config-section">
+      <div class="perfil-seccion-titulo">Datos de Contacto</div>
+      <div class="perfil-avatar-preview" style="margin-bottom:16px;">
+        <div class="perfil-avatar-contenedor-imagen">
+          <div class="perfil-avatar-circulo" id="cfg-avatar-circulo">?</div>
+          <img class="perfil-avatar-img-real" id="cfg-avatar-img" src="" alt="Avatar" style="display:none;"/>
+          <label class="perfil-avatar-subir-btn" for="cfg-foto" title="Cambiar foto de perfil">📷</label>
+          <input type="file" id="cfg-foto" accept="image/*" style="display:none;" onchange="previsualizarAvatarConfig(this)"/>
+        </div>
+        <div class="perfil-avatar-info">
+          <div class="perfil-avatar-nombre" id="cfg-preview-nombre">—</div>
+          <div class="perfil-avatar-email"  id="cfg-preview-email">—</div>
+        </div>
+      </div>
+      <div class="perfil-fila">
+        <div class="campo-grupo">
+          <label for="cfg-nombre">Nombre</label>
+          <input type="text" id="cfg-nombre" placeholder="Tu nombre"/>
+        </div>
+        <div class="campo-grupo">
+          <label for="cfg-apellido">Apellido</label>
+          <input type="text" id="cfg-apellido" placeholder="Tu apellido"/>
+        </div>
+      </div>
+      <div class="campo-grupo">
+        <label for="cfg-telefono">Teléfono</label>
+        <input type="tel" id="cfg-telefono" placeholder="Ej: 1165336599"/>
+      </div>
+      <button class="btn-registrarse" id="btn-guardar-perfil-cfg" type="button" onclick="guardarDatosContacto()" style="margin-top:4px;">
+        <span id="txt-guardar-perfil-cfg">Guardar cambios</span>
+        <div class="spinner" id="spin-guardar-perfil-cfg"></div>
+      </button>
+      <div class="alerta-registro" id="alerta-cfg-perfil"></div>
+    </div>
+
+    <!-- Sección 2: Ubicación Preferida -->
+    <div id="config-sec-ubicacion" class="config-section hidden">
+      <div class="perfil-seccion-titulo">Ubicación Predeterminada</div>
+      <p style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5;">
+        Esta localidad se usa como <strong>respaldo automático</strong> cuando publicás un artículo y el GPS del navegador no está disponible o fue denegado.
+      </p>
+      <div class="campo-grupo">
+        <label for="cfg-ubicacion-pref">Localidad predeterminada</label>
+        <div class="ubicacion-wrap">
+          <input type="text" id="cfg-ubicacion-pref"
+            placeholder="Ej: Glew, Almirante Brown, Buenos Aires"
+            list="cfg-sug-ubicacion" oninput="buscarUbicacionConfig()" autocomplete="off"/>
+          <button type="button" class="btn-gps" onclick="obtenerUbicacionGPSConfig()" title="Detectar mi ubicación actual">🎯</button>
+        </div>
+        <datalist id="cfg-sug-ubicacion"></datalist>
+      </div>
+      <button class="btn-registrarse" id="btn-guardar-ubic-cfg" type="button" onclick="guardarUbicacionPreferida()" style="margin-top:4px;">
+        <span id="txt-guardar-ubic-cfg">Guardar ubicación</span>
+        <div class="spinner" id="spin-guardar-ubic-cfg"></div>
+      </button>
+      <div class="alerta-registro" id="alerta-cfg-ubicacion"></div>
+    </div>
+
+    <!-- Sección 3: Seguridad -->
+    <div id="config-sec-seguridad" class="config-section hidden">
+      <div class="perfil-seccion-titulo">Cambiar Contraseña</div>
+      <div class="campo-grupo">
+        <label for="cfg-pass-actual">Contraseña actual</label>
+        <input type="password" id="cfg-pass-actual" placeholder="••••••••"/>
+      </div>
+      <div class="campo-grupo">
+        <label for="cfg-pass-nueva">Nueva contraseña <span style="color:#999;font-weight:400">(mínimo 6 caracteres)</span></label>
+        <input type="password" id="cfg-pass-nueva" placeholder="••••••••"/>
+      </div>
+      <div class="campo-grupo">
+        <label for="cfg-pass-confirmar">Confirmá la nueva contraseña</label>
+        <input type="password" id="cfg-pass-confirmar" placeholder="••••••••"/>
+      </div>
+      <button class="btn-registrarse" id="btn-cambiar-pass" type="button" onclick="cambiarContrasena()" style="margin-top:4px;">
+        <span id="txt-cambiar-pass">Cambiar contraseña</span>
+        <div class="spinner" id="spin-cambiar-pass"></div>
+      </button>
+      <div class="alerta-registro" id="alerta-cfg-seguridad"></div>
+
+      <div class="divider" style="margin:22px 0;"></div>
+
+      <div class="perfil-seccion-titulo" style="color:#EF4444;">⚠️ Zona de Peligro</div>
+      <p style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.5;">
+        Esta acción es <strong>irreversible</strong>. Eliminará tu cuenta y todos tus datos de forma permanente.
+      </p>
+      <button type="button" class="zona-peligro-btn" onclick="eliminarCuenta()">
+        🗑️ Eliminar mi cuenta definitivamente
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- MODAL DETALLE DE ARTÍCULO                           -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="detalleArticuloModal" onclick="if(event.target.id==='detalleArticuloModal') cerrarDetalleArticulo()">
+  <div class="detalle-modal" onclick="event.stopPropagation()">
+    <button class="detalle-cerrar" onclick="cerrarDetalleArticulo()">&times;</button>
+
+    <!-- Carrusel de imágenes -->
+    <div class="detalle-carrusel" id="detalle-carrusel">
+      <div class="detalle-carrusel-placeholder" id="detalle-placeholder">🔧</div>
+      <!-- Las <img> se inyectan por JS -->
+      <button class="carrusel-btn carrusel-prev" id="carrusel-prev" onclick="moverCarrusel(-1)" style="display:none;">&#8249;</button>
+      <button class="carrusel-btn carrusel-next" id="carrusel-next" onclick="moverCarrusel(1)"  style="display:none;">&#8250;</button>
+      <div class="carrusel-dots" id="carrusel-dots"></div>
+    </div>
+
+    <!-- Info del artículo -->
+    <div class="detalle-cuerpo">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <div class="detalle-tipo-badge" id="detalle-tipo-badge">📦 Producto</div>
+        <div class="detalle-rating">
+          ★ <span id="detalle-rating-num">5.0</span>
+        </div>
+      </div>
+
+      <div class="detalle-titulo" id="detalle-titulo">—</div>
+
+      <div class="detalle-precio">
+        $<span id="detalle-precio-num" class="precio-monto">0</span><span id="detalle-tipo-cobro" class="precio-cobro"> / día</span>
+      </div>
+
+      <div class="detalle-tags" id="detalle-tags"></div>
+
+      <div class="detalle-descripcion" id="detalle-descripcion" style="display:none;"></div>
+
+      <!-- Info del vendedor -->
+      <div class="detalle-vendedor">
+        <div id="detalle-avatar-wrap"></div>
+        <div class="detalle-vendedor-info">
+          <div class="detalle-vendedor-nombre" id="detalle-vendedor-nombre">—</div>
+          <div class="detalle-vendedor-sub">Vendedor verificado</div>
+        </div>
+        <div class="detalle-rating">★ <span id="detalle-vendedor-rep">0</span></div>
+      </div>
+
+      <!-- Botón Chatear -->
+      <button class="btn-chatear" onclick="iniciarChatDesdeDetalle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        Chatear con el vendedor
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
