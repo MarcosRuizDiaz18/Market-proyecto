@@ -59,6 +59,18 @@
     ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
 
 
+    /* ── Tooltip de marcadores en el mapa ──────────────────────────── */
+    .mapa-tooltip-articulo {
+      background: #111 !important; color: #f0f0f0 !important;
+      border: none !important; border-radius: 6px !important;
+      font-size: 11px !important; font-weight: 600 !important;
+      font-family: 'Montserrat', sans-serif !important;
+      padding: 4px 9px !important; box-shadow: 0 2px 8px rgba(0,0,0,.35) !important;
+      white-space: nowrap !important; max-width: 160px !important;
+    }
+    .mapa-tooltip-articulo::before { border-top-color: #111 !important; }
+    body.dark-theme .mapa-tooltip-articulo { background: #1e1e1e !important; border: 1px solid #333 !important; }
+
     /* ── Dark mode: overrides de elementos específicos ─────────────── */
     body.dark-theme header           { background: var(--bg-header); border-bottom-color: var(--borde); }
     body.dark-theme aside            { background: var(--bg-aside); border-right-color: var(--borde); }
@@ -90,6 +102,8 @@
     body.dark-theme #zona-sugerencias { background: var(--bg-tarjeta); border-color: var(--borde); }
     body.dark-theme .detalle-modal   { background: var(--bg-modal); }
     body.dark-theme .stars-sm::before { color: var(--acento); }
+    body.dark-theme .btn-upload  { color: #111 !important; }
+    body.dark-theme .price-badge { color: #111 !important; }
 
     /* ── HEADER ── */
     header {
@@ -111,6 +125,17 @@
     }
     .search-wrap input:focus { border-color: var(--texto-primario); }
     .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    /* ── Mapa interactivo de Configuración ─────────────── */
+    #mapa-config-leaflet {
+      height: 260px; border-radius: 12px; overflow: hidden;
+      border: 1.5px solid var(--borde); margin-top: 12px;
+      position: relative; background: var(--bg-input);
+    }
+    .mapa-config-hint {
+      font-size: 11px; color: var(--texto-muted);
+      margin-top: 6px; text-align: center;
+    }
+
     /* ── Botón Dark/Light Mode ─────────────────────────── */
     .btn-tema {
       background: none; border: 1.5px solid var(--borde);
@@ -1062,6 +1087,25 @@
       font-size: 12px;
       font-weight: 600;
       color: var(--texto-secundario);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    a.detalle-tag-ubicacion {
+      border: 1.5px solid transparent;
+      transition: border-color .15s, background .15s;
+      cursor: pointer;
+    }
+    a.detalle-tag-ubicacion:hover {
+      border-color: #3B82F6;
+      background: #EFF6FF;
+      color: #1D4ED8;
+    }
+    body.dark-theme a.detalle-tag-ubicacion:hover {
+      background: #1e3a5f;
+      color: #93C5FD;
+      border-color: #3B82F6;
     }
     .detalle-descripcion {
       font-size: 13px;
@@ -1107,6 +1151,104 @@
     }
     .btn-chatear:hover { background: #222; transform: translateY(-1px); }
     .btn-chatear:active { transform: translateY(0); }
+
+    /* ── Modal Perfil Público ─────────────────────────────────────────── */
+    #perfilPublicoModal {
+      display: none; position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      align-items: flex-start; justify-content: center;
+      padding: 24px 16px; overflow-y: auto;
+    }
+    #perfilPublicoModal.abierto { display: flex; }
+    .pp-contenedor {
+      background: var(--bg-modal); border-radius: 18px;
+      width: 100%; max-width: 680px;
+      box-shadow: 0 8px 40px var(--sombra-media);
+      overflow: hidden; animation: ppSlideUp .2s ease;
+    }
+    @keyframes ppSlideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .pp-header {
+      background: var(--bg-aside); border-bottom: 1px solid var(--borde);
+      padding: 22px 24px 18px; display: flex; gap: 18px; align-items: flex-start;
+      position: relative;
+    }
+    .pp-cerrar {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; cursor: pointer;
+      color: var(--texto-muted); font-size: 20px; line-height: 1;
+      padding: 4px 8px; border-radius: 6px; transition: background .15s;
+    }
+    .pp-cerrar:hover { background: var(--bg-hover); color: var(--texto-primario); }
+    .pp-avatar-wrap {
+      width: 80px; height: 80px; flex-shrink: 0;
+      border-radius: 50%; overflow: hidden;
+      border: 3px solid var(--borde); background: var(--bg-input);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+    }
+    .pp-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .pp-info { flex: 1; min-width: 0; }
+    .pp-nombre {
+      font-size: 20px; font-weight: 800; color: var(--texto-primario);
+      margin-bottom: 4px; line-height: 1.2;
+    }
+    .pp-estrellas {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+    }
+    .pp-estrellas-val {
+      font-size: 15px; font-weight: 700; color: var(--texto-primario);
+    }
+    .pp-estrellas-stars { color: #F59E0B; font-size: 14px; letter-spacing: 1px; }
+    .pp-resenas { font-size: 12px; color: var(--texto-muted); }
+    .pp-ubicacion {
+      font-size: 12px; color: var(--texto-secundario); display: flex; align-items: center; gap: 4px;
+    }
+    .pp-body { padding: 20px 24px; }
+    .pp-subtitulo {
+      font-size: 13px; font-weight: 700; color: var(--texto-primario);
+      margin-bottom: 14px; letter-spacing: .3px;
+    }
+    .pp-grilla {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .pp-card {
+      background: var(--bg-tarjeta); border-radius: 12px;
+      border: 1px solid var(--borde); overflow: hidden;
+      cursor: pointer; transition: box-shadow .15s, transform .15s;
+    }
+    .pp-card:hover {
+      box-shadow: 0 4px 16px var(--sombra-media); transform: translateY(-2px);
+    }
+    .pp-card-img {
+      width: 100%; height: 110px; object-fit: cover; display: block;
+      background: var(--bg-input);
+    }
+    .pp-card-img-placeholder {
+      width: 100%; height: 110px; display: flex; align-items: center;
+      justify-content: center; font-size: 30px; background: var(--bg-input);
+    }
+    .pp-card-body { padding: 10px 10px 12px; }
+    .pp-card-titulo {
+      font-size: 12px; font-weight: 700; color: var(--texto-primario);
+      margin-bottom: 4px; line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .pp-card-precio {
+      font-size: 13px; font-weight: 800; color: var(--texto-primario);
+    }
+    .pp-card-cobro { font-size: 11px; color: var(--texto-muted); font-weight: 400; }
+    .pp-empty {
+      text-align: center; padding: 32px 0; color: var(--texto-muted); font-size: 14px;
+    }
+    .pp-loading {
+      text-align: center; padding: 40px 0; color: var(--texto-muted); font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -1376,11 +1518,22 @@
       <button class="type-btn inactive" id="btnServ" onclick="setType('Servicio')">Servicio</button>
     </div>
     <form id="formulario-publicar">
-      <label class="field-lbl">nombre</label>
-      <input class="field-inp" name="nombre" placeholder="Ej. Taladro Bosch / Electricista" required />
+      <label class="field-lbl">Título de la publicación</label>
+      <input class="field-inp" name="nombre" placeholder="Ej: Taladro Bosch / Soldadora Inverter" required />
 
-      <label class="field-lbl">Precio</label>
-      <input class="field-inp" name="precio" type="number" placeholder="$0.000" required/>
+      <div style="display:flex;gap:10px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label class="field-lbl">Precio</label>
+          <input class="field-inp" name="precio" type="number" placeholder="$0.000" min="0" required/>
+        </div>
+        <div style="flex:1;">
+          <label class="field-lbl">Modalidad de cobro</label>
+          <select class="field-inp" name="tipoCobro" required style="appearance:auto;cursor:pointer;">
+            <option value="por día" selected>📅 Por día</option>
+            <option value="por hora">⏱️ Por hora</option>
+          </select>
+        </div>
+      </div>
 
       <label class="field-lbl">Categoría</label>
       <select class="field-inp" name="categoria" required style="appearance:auto; cursor:pointer;">
@@ -1461,6 +1614,25 @@ function init() {
     if (temaGuardado) _aplicarTema(temaGuardado);
   } catch(e) {}
 
+  // ── Restaurar ubicación persistida del usuario ─────────────────────────
+  // Si el usuario ya inició sesión antes, sus coords quedan en localStorage.
+  // Las cargamos en las variables globales para que los filtros y el mapa
+  // de configuración arranquen ya centrados en su casa.
+  try {
+    const rawSesion = localStorage.getItem('usuarioEquipYa');
+    if (rawSesion) {
+      const u = JSON.parse(rawSesion);
+      if (u.latitud  !== null && u.latitud  !== undefined) {
+        _filtroZonaLat = u.latitud;
+        _configLat     = u.latitud;
+      }
+      if (u.longitud !== null && u.longitud !== undefined) {
+        _filtroZonaLng = u.longitud;
+        _configLng     = u.longitud;
+      }
+    }
+  } catch(e) {}
+
   // Stars sidebar
   [5,4,3].forEach(n => {
     const el = document.getElementById('s'+n);
@@ -1514,7 +1686,7 @@ function verifiedSVG() {
 function renderCard(item) {
   const idStr = item._id || item.id;
   const isService = item.tipo === 'servicio' || item.type === 'service';
-  const priceLabel = isService ? '/visita' : `/${item.tipoCobro || 'día'}`;
+  const priceLabel = isService ? '/visita' : `/ ${item.tipoCobro || 'por día'}`;
 
   const precioFijo = item.precioBase || item.price || 0;
   const savings = Math.round(precioFijo * 12);
@@ -1701,16 +1873,36 @@ function previsualizarFotosPublicacion(input) {
 }
 
 function openUpload() {
-  // Reseteamos coordenadas anteriores al abrir un formulario nuevo
+  // ── Heredar coordenadas y dirección del perfil del usuario ────────────────
   latitudArticulo  = null;
   longitudArticulo = null;
+  try {
+    const usuarioGuardado = localStorage.getItem('usuarioEquipYa');
+    if (usuarioGuardado) {
+      const u = JSON.parse(usuarioGuardado);
+      // Prioridad: coords del mapa de config → coords GPS guardadas en perfil
+      if (_configLat !== null && _configLng !== null) {
+        latitudArticulo  = _configLat;
+        longitudArticulo = _configLng;
+      } else if (u.latitud && u.longitud) {
+        latitudArticulo  = u.latitud;
+        longitudArticulo = u.longitud;
+      }
+      // Pre-rellenar el campo de texto de ubicación
+      const inputUbic = document.getElementById('ubicacion-publicacion');
+      if (inputUbic && !inputUbic.value && (u.ubicacionPreferida || u.direccion)) {
+        inputUbic.value = u.ubicacionPreferida || u.direccion || '';
+      }
+    }
+  } catch(e) {}
+
   // Limpiamos preview de fotos
   const prev = document.getElementById('preview-fotos-pub');
   if (prev) prev.innerHTML = '';
   const inp = document.getElementById('imagenes');
   if (inp) inp.value = '';
   document.getElementById('uploadModal').classList.remove('hidden');
-  // GPS manual: el usuario presiona el botón 🎯 cuando quiera usar su ubicación actual
+  // El usuario puede refinar con el botón 🎯 GPS si lo desea
 }
 
 // ── Geolocalización GPS + Geocodificación Inversa ─────────────────────────────
@@ -2011,11 +2203,32 @@ function irAPerfil() {
       const emailEl  = document.getElementById('perfil-preview-email');
       if (nombreEl) nombreEl.textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim();
       if (emailEl)  emailEl.textContent  = u.email || '';
+
+      // Campos read-only en el modal Mi Perfil
+      const _setSpan = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+      _setSpan('perfil-ro-nombre',    u.nombre);
+      _setSpan('perfil-ro-apellido',  u.apellido);
+      _setSpan('perfil-ro-email',     u.email);
+      _setSpan('perfil-ro-telefono',  u.telefono || 'No indicado');
+      _setSpan('perfil-ro-direccion', u.direccion || 'No indicada');
+
+      // Estrellas de calificación
+      const prom = parseFloat(u.promedioValoracion || u.puntuacion || 0);
+      const cant = parseInt(u.cantidadReseñas || 0, 10);
+      const starsEl   = document.getElementById('perfil-ro-stars');
+      const ratingEl  = document.getElementById('perfil-ro-rating');
+      const resenasEl = document.getElementById('perfil-ro-resenas');
+      if (starsEl) {
+        let starsHTML = '';
+        for (let s = 1; s <= 5; s++) {
+          starsHTML += s <= Math.round(prom) ? '★' : '☆';
+        }
+        starsEl.textContent = starsHTML;
+      }
+      if (ratingEl)  ratingEl.textContent  = prom > 0 ? prom.toFixed(1) : '—';
+      if (resenasEl) resenasEl.textContent  = cant > 0 ? `(${cant} reseña${cant !== 1 ? 's' : ''})` : '(sin reseñas)';
     }
   } catch (err) { console.error("Error al abrir perfil:", err); }
-
-  const alerta = document.getElementById('perfil-alerta');
-  if (alerta) { alerta.textContent = ''; alerta.className = 'alerta-registro'; }
 
   document.getElementById('perfilModal').classList.remove('hidden');
 }
@@ -2600,15 +2813,24 @@ async function enviarLogin() {
     const datos = await respuesta.json();
 
     if (respuesta.ok) {
+      const u = datos.usuario || datos;
       const sesion = {
-        nombre:   datos.usuario?.nombre   || datos.nombre   || 'Usuario',
-        apellido: datos.usuario?.apellido || datos.apellido || '',
-        email:    datos.usuario?.email    || datos.email    || email,
-        id:       datos.usuario?._id      || datos.usuario?.id || datos.id || null,
-        avatar:   datos.usuario?.avatar   || datos.avatar   || null,
-        token:    datos.token || null,
+        nombre:             u.nombre             || 'Usuario',
+        apellido:           u.apellido           || '',
+        email:              u.email              || email,
+        id:                 u._id                || u.id    || null,
+        avatar:             u.avatar             || null,
+        token:              datos.token          || null,
+        // ── Ubicación persistida desde el backend ──────────────────────
+        ubicacionPreferida: u.ubicacionPreferida || null,
+        latitud:            u.latitud            ?? null,
+        longitud:           u.longitud           ?? null,
       };
       localStorage.setItem('usuarioEquipYa', JSON.stringify(sesion));
+
+      // Restaurar coordenadas a las variables globales del mapa
+      if (sesion.latitud  !== null) { _filtroZonaLat = sesion.latitud;  _configLat = sesion.latitud;  }
+      if (sesion.longitud !== null) { _filtroZonaLng = sesion.longitud; _configLng = sesion.longitud; }
       actualizarAvatar();
       actualizarBadgeChats(); // mostrar mensajes sin leer al iniciar sesión
 
@@ -2707,6 +2929,12 @@ function cerrarConfiguracion() {
   document.getElementById('configuracionModal').classList.add('hidden');
 }
 
+// ── Variables de estado para el mapa de configuración ─────────────────────
+let _mapaConfig       = null;   // instancia Leaflet del mapa de config
+let _pinConfigUsuario = null;   // marcador del pin manual en mapa config
+let _configLat        = null;   // latitud elegida en configuración
+let _configLng        = null;   // longitud elegida en configuración
+
 function setConfigTab(tab) {
   ['perfil', 'ubicacion', 'seguridad'].forEach(t => {
     document.getElementById(`config-sec-${t}`).classList.toggle('hidden', t !== tab);
@@ -2714,6 +2942,92 @@ function setConfigTab(tab) {
   document.querySelectorAll('.config-tab').forEach((btn, i) => {
     btn.classList.toggle('active', ['perfil','ubicacion','seguridad'][i] === tab);
   });
+
+  // Inicializar el mapa de ubicación la primera vez que se abre la tab
+  if (tab === 'ubicacion') {
+    setTimeout(_inicializarMapaConfig, 80);
+  }
+}
+
+// ── Inicializa el mapa de Configuración (lazy, solo una vez) ──────────────
+function _inicializarMapaConfig() {
+  if (typeof L === 'undefined') return;
+  const contenedor = document.getElementById('mapa-config-leaflet');
+  if (!contenedor) return;
+
+  if (!_mapaConfig) {
+    // Centrar en GBA por defecto, o en coords ya guardadas del usuario
+    const usuarioGuardado = localStorage.getItem('usuarioEquipYa');
+    let centroLat = -34.63, centroLng = -58.38, zoom = 12;
+    if (usuarioGuardado) {
+      try {
+        const u = JSON.parse(usuarioGuardado);
+        if (u.latitud  && u.longitud) {
+          centroLat = u.latitud; centroLng = u.longitud; zoom = 15;
+          _configLat = u.latitud; _configLng = u.longitud;
+        }
+      } catch(e) {}
+    }
+
+    _mapaConfig = L.map('mapa-config-leaflet', { zoomControl: true, attributionControl: false })
+      .setView([centroLat, centroLng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_mapaConfig);
+
+    // Si ya tiene coords guardadas, colocar el pin
+    if (_configLat && _configLng) {
+      _actualizarPinConfig(_configLat, _configLng);
+    }
+
+    // Clic en el mapa: mover pin + geocodificación inversa
+    _mapaConfig.on('click', async function(e) {
+      const lat = e.latlng.lat, lng = e.latlng.lng;
+      _configLat = lat; _configLng = lng;
+      _actualizarPinConfig(lat, lng);
+
+      const inputCfg = document.getElementById('cfg-ubicacion-pref');
+      if (inputCfg) inputCfg.value = '📍 Cargando dirección...';
+
+      try {
+        const resp = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=es`,
+          { headers: { 'Accept-Language': 'es' } }
+        );
+        if (resp.ok) {
+          const geo  = await resp.json();
+          const addr = geo.address || {};
+          const calle = addr.road || addr.pedestrian || addr.footway || '';
+          const num   = addr.house_number ? ` ${addr.house_number}` : '';
+          const loc   = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.city || '';
+          const label = [calle + num, loc].filter(Boolean).join(', ') || geo.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          if (inputCfg) inputCfg.value = label;
+        } else {
+          if (inputCfg) inputCfg.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+      } catch(err) {
+        if (inputCfg) inputCfg.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }
+    });
+
+    setTimeout(() => { try { _mapaConfig.invalidateSize(); } catch(e) {} }, 150);
+  } else {
+    // Ya inicializado: solo forzar re-medición por si el modal cambió de tamaño
+    setTimeout(() => { try { _mapaConfig.invalidateSize(); } catch(e) {} }, 150);
+  }
+}
+
+// ── Mueve o crea el pin del usuario en el mapa de config ──────────────────
+function _actualizarPinConfig(lat, lng) {
+  if (!_mapaConfig) return;
+  const icono = L.divIcon({
+    html: `<div style="width:20px;height:20px;background:#3B82F6;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,
+    iconSize: [20, 20], iconAnchor: [10, 10], className: '',
+  });
+  if (_pinConfigUsuario) {
+    _pinConfigUsuario.setLatLng([lat, lng]);
+  } else {
+    _pinConfigUsuario = L.marker([lat, lng], { icon: icono }).addTo(_mapaConfig)
+      .bindTooltip('Tu ubicación', { permanent: false, direction: 'top' });
+  }
 }
 
 function previsualizarAvatarConfig(input) {
@@ -2749,24 +3063,26 @@ async function guardarDatosContacto() {
   const inputFile = document.getElementById('cfg-foto');
   if (inputFile && inputFile.files[0]) formData.append('fotoPerfil', inputFile.files[0]);
 
-  boton.disabled = true; texto.textContent = 'Guardando...'; spinner.style.display = 'block';
+  if (boton) boton.disabled = true;
+  if (texto)   texto.textContent     = 'Guardando...';
+  if (spinner) spinner.style.display = 'block';
   try {
     const res   = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, { method: 'PUT', body: formData });
     const datos = await res.json();
     if (res.ok) {
       _actualizarSesionLocal(datos.usuario || datos);
       actualizarAvatar();
-      alerta.textContent = '¡Datos actualizados correctamente!';
-      alerta.className   = 'alerta-registro exito';
+      if (alerta) { alerta.textContent = '¡Datos actualizados correctamente!'; alerta.className = 'alerta-registro exito'; }
     } else {
-      alerta.textContent = datos.detalles ? datos.detalles.join(' · ') : (datos.error || 'Error al guardar.');
-      alerta.className   = 'alerta-registro error';
+      const msg = datos.detalles ? datos.detalles.join(' · ') : (datos.error || 'Error al guardar.');
+      if (alerta) { alerta.textContent = msg; alerta.className = 'alerta-registro error'; }
     }
   } catch {
-    alerta.textContent = 'No se pudo conectar con el servidor.';
-    alerta.className   = 'alerta-registro error';
+    if (alerta) { alerta.textContent = 'No se pudo conectar con el servidor.'; alerta.className = 'alerta-registro error'; }
   } finally {
-    boton.disabled = false; texto.textContent = 'Guardar cambios'; spinner.style.display = 'none';
+    if (boton)   boton.disabled        = false;
+    if (texto)   texto.textContent     = 'Guardar cambios';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -2825,28 +3141,45 @@ async function guardarUbicacionPreferida() {
   }
 
   const ubicacion = document.getElementById('cfg-ubicacion-pref').value.trim();
-  boton.disabled = true; texto.textContent = 'Guardando...'; spinner.style.display = 'block';
+  if (boton) boton.disabled = true;
+  if (texto)   texto.textContent     = 'Guardando...';
+  if (spinner) spinner.style.display = 'block';
   try {
     const res   = await fetch(`${URL_BACKEND}/api/usuarios/actualizar/${idUsuario}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ubicacionPreferida: ubicacion }),
+      body: JSON.stringify({
+        ubicacionPreferida: ubicacion,
+        // Coordenadas capturadas por clic en el mapa de config (pueden ser null)
+        ...((_configLat !== null && _configLng !== null) ? { latitud: _configLat, longitud: _configLng } : {}),
+      }),
     });
     const datos = await res.json();
     if (res.ok) {
-      _actualizarSesionLocal({ ubicacionPreferida: ubicacion });
-      const el = document.getElementById('perfil-ubicacion-pref');
-      if (el) el.value = ubicacion;
-      alerta.textContent = '¡Ubicación guardada correctamente!';
-      alerta.className   = 'alerta-registro exito';
+      // ── La fuente de verdad es lo que devuelve el backend ───────────────
+      const usuarioBack = datos.usuario || {};
+      const latBack  = usuarioBack.latitud  ?? _configLat;
+      const lngBack  = usuarioBack.longitud ?? _configLng;
+
+      // 1. Actualizar sesión en localStorage
+      const actualizacion = { ubicacionPreferida: ubicacion };
+      if (latBack !== null && latBack !== undefined)  actualizacion.latitud  = latBack;
+      if (lngBack !== null && lngBack !== undefined)  actualizacion.longitud = lngBack;
+      _actualizarSesionLocal(actualizacion);
+
+      // 2. Sincronizar variables globales del mapa principal y filtros
+      if (latBack !== null && latBack !== undefined) { _filtroZonaLat = latBack; _configLat = latBack; }
+      if (lngBack !== null && lngBack !== undefined) { _filtroZonaLng = lngBack; _configLng = lngBack; }
+
+      if (alerta) { alerta.textContent = '¡Ubicación guardada correctamente! Ya queda grabada en tu cuenta.'; alerta.className = 'alerta-registro exito'; }
     } else {
-      alerta.textContent = datos.error || 'Error al guardar.';
-      alerta.className   = 'alerta-registro error';
+      if (alerta) { alerta.textContent = datos.error || 'Error al guardar.'; alerta.className = 'alerta-registro error'; }
     }
   } catch {
-    alerta.textContent = 'No se pudo conectar con el servidor.';
-    alerta.className   = 'alerta-registro error';
+    if (alerta) { alerta.textContent = 'No se pudo conectar con el servidor.'; alerta.className = 'alerta-registro error'; }
   } finally {
-    boton.disabled = false; texto.textContent = 'Guardar ubicación'; spinner.style.display = 'none';
+    if (boton)   boton.disabled        = false;
+    if (texto)   texto.textContent     = 'Guardar ubicación';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -2881,7 +3214,9 @@ async function cambiarContrasena() {
     alerta.className = 'alerta-registro error'; return;
   }
 
-  boton.disabled = true; texto.textContent = 'Verificando...'; spinner.style.display = 'block';
+  if (boton) boton.disabled = true;
+  if (texto)   texto.textContent     = 'Verificando...';
+  if (spinner) spinner.style.display = 'block';
   try {
     const res   = await fetch(`${URL_BACKEND}/api/usuarios/contrasena/${idUsuario}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -2892,17 +3227,16 @@ async function cambiarContrasena() {
       ['cfg-pass-actual','cfg-pass-nueva','cfg-pass-confirmar'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
-      alerta.textContent = '¡Contraseña actualizada correctamente!';
-      alerta.className   = 'alerta-registro exito';
+      if (alerta) { alerta.textContent = '¡Contraseña actualizada correctamente!'; alerta.className = 'alerta-registro exito'; }
     } else {
-      alerta.textContent = datos.error || 'Error al cambiar la contraseña.';
-      alerta.className   = 'alerta-registro error';
+      if (alerta) { alerta.textContent = datos.error || 'Error al cambiar la contraseña.'; alerta.className = 'alerta-registro error'; }
     }
   } catch {
-    alerta.textContent = 'No se pudo conectar con el servidor.';
-    alerta.className   = 'alerta-registro error';
+    if (alerta) { alerta.textContent = 'No se pudo conectar con el servidor.'; alerta.className = 'alerta-registro error'; }
   } finally {
-    boton.disabled = false; texto.textContent = 'Cambiar contraseña'; spinner.style.display = 'none';
+    if (boton)   boton.disabled        = false;
+    if (texto)   texto.textContent     = 'Cambiar contraseña';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -2945,6 +3279,13 @@ function _actualizarSesionLocal(camposNuevos) {
     localStorage.setItem('usuarioEquipYa', JSON.stringify({ ...sesion, ...camposNuevos }));
   } catch { /* Fallback silencioso */ }
 }
+
+// ── Alias de nombres usados en el HTML del modal de Configuración ─────────
+// El HTML llama a estos nombres; acá delegan en las funciones reales.
+function guardarConfigPerfil(e)    { if (e) e.preventDefault(); guardarDatosContacto(); }
+function guardarConfigUbicacion()  { guardarUbicacionPreferida(); }
+function guardarConfigContrasena(e){ if (e) e.preventDefault(); cambiarContrasena(); }
+function confirmarEliminarCuenta() { eliminarCuenta(); }
 
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -3025,7 +3366,7 @@ function _poblarDetalleModal(item) {
 
   document.getElementById('detalle-titulo').textContent = item.titulo || item.name || '—';
   document.getElementById('detalle-precio-num').textContent = (item.precioBase || item.price || 0).toLocaleString('es-AR');
-  document.getElementById('detalle-tipo-cobro').textContent = ` / ${item.tipoCobro || 'día'}`;
+  document.getElementById('detalle-tipo-cobro').textContent = ` / ${item.tipoCobro || 'por día'}`;
 
   const ratingEl = document.getElementById('detalle-rating-num');
   ratingEl.textContent = (item.vendedor?.promedioValoracion || item.rating || 0).toFixed(1);
@@ -3033,18 +3374,41 @@ function _poblarDetalleModal(item) {
   // Tags de categoría y ubicación
   const tagsEl = document.getElementById('detalle-tags');
   tagsEl.innerHTML = '';
-  const tags = [
+  // Tags de texto simples (categoría, partido, servicio)
+  const tagsTexto = [
     item.categoria  ? `📂 ${item.categoria}` : null,
-    item.localidad  ? `📍 ${item.localidad}` : null,
     item.partido    ? `🗺️ ${item.partido}` : null,
     (isServicio && item.precioServicio) ? `🛠️ Servicio $${item.precioServicio?.toLocaleString('es-AR')}` : null,
   ].filter(Boolean);
-  tags.forEach(t => {
+  tagsTexto.forEach(t => {
     const span = document.createElement('span');
     span.className = 'detalle-tag';
     span.textContent = t;
     tagsEl.appendChild(span);
   });
+
+  // Tag de ubicación: enlace a Google Maps si hay coordenadas, texto plano si no
+  if (item.localidad) {
+    const tieneCoords = item.latitud && item.longitud
+      && !isNaN(parseFloat(item.latitud)) && !isNaN(parseFloat(item.longitud));
+
+    if (tieneCoords) {
+      const urlMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.latitud)},${encodeURIComponent(item.longitud)}`;
+      const enlace = document.createElement('a');
+      enlace.className = 'detalle-tag detalle-tag-ubicacion';
+      enlace.href      = urlMaps;
+      enlace.target    = '_blank';
+      enlace.rel       = 'noopener noreferrer';
+      enlace.title     = 'Ver en Google Maps';
+      enlace.innerHTML = `📍 ${item.localidad} <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;opacity:.7;"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+      tagsEl.appendChild(enlace);
+    } else {
+      const span = document.createElement('span');
+      span.className = 'detalle-tag';
+      span.textContent = `📍 ${item.localidad}`;
+      tagsEl.appendChild(span);
+    }
+  }
 
   // Descripción
   const descEl = document.getElementById('detalle-descripcion');
@@ -3593,25 +3957,10 @@ function _actualizarPinUsuario(lat, lng) {
 
 // ── Ir a la Sede Facultad ───────────────────────────────────────────────────
 function irASedeFactultad() {
-  if (!_mapaLeaflet) return;
-  _mapaLeaflet.setView([_SEDE_FACULTAD_LAT, _SEDE_FACULTAD_LNG], 16, { animate: true });
-
-  // Pin de la sede si no existe todavía
-  if (!_mapaLeaflet._pinSede) {
-    const iconoSede = L.divIcon({
-      html: '<div style="background:#E2FF00;border:2px solid #111;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.3);">🎓</div>',
-      iconSize: [28, 28], iconAnchor: [14, 14], className: '',
-    });
-    _mapaLeaflet._pinSede = L.marker([_SEDE_FACULTAD_LAT, _SEDE_FACULTAD_LNG], { icon: iconoSede })
-      .addTo(_mapaLeaflet)
-      .bindPopup('<div style="font-size:12px;font-weight:700;text-align:center;">🎓 Sede Facultad<br><span style="font-weight:400;color:#666;">Paseo Colón, CABA</span></div>')
-      .openPopup();
-  } else {
-    _mapaLeaflet._pinSede.openPopup();
-  }
+  window.open('https://maps.app.goo.gl/w2WqwFsBUEN3MYo27', '_blank');
 }
 
-// ── Actualizar marcadores de artículos en el mapa ──────────────────────────
+// ── Actualizar marcadores del mapa agrupados por vendedor ──────────────────
 function actualizarMarcadoresArticulos(articulos) {
   try {
     if (!_mapaLeaflet || !_capaMarcadores) return;
@@ -3619,44 +3968,138 @@ function actualizarMarcadoresArticulos(articulos) {
 
     const URL_BACK = typeof URL_BACKEND !== 'undefined' ? URL_BACKEND : '';
 
-    (articulos || []).forEach(art => {
+    // ID del usuario logueado (para distinguir pin azul vs rojo)
+    const idUsuarioLogueado = (() => {
       try {
-        const lat = parseFloat(art.latitud);
-        const lng = parseFloat(art.longitud);
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+        const u = JSON.parse(localStorage.getItem('usuarioEquipYa') || '{}');
+        return u.id || u._id || '';
+      } catch(e) { return ''; }
+    })();
 
-        // Fallback estricto: imagenes[] → imagen (string viejo) → default
-        let fotoPin = (art.imagenes && art.imagenes.length > 0)
-          ? art.imagenes[0]
-          : (art.imagen || null);
+    // ── 1. Agrupar artículos por vendedor ──────────────────────────────────
+    const porVendedor = {};   // { idVendedor: { vendedor, articulos[], lat, lng } }
 
-        const imgTag = fotoPin
-          ? `<img src="${URL_BACK}${fotoPin}"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-               style="width:54px;height:54px;object-fit:cover;border-radius:50%;border:2px solid #E2FF00;display:block;margin:0 auto 6px;">
-             <div style="width:54px;height:54px;border-radius:50%;background:#E8EEF4;border:2px solid #E2FF00;align-items:center;justify-content:center;margin:0 auto 6px;font-size:22px;display:none;">📦</div>`
-          : `<div style="width:54px;height:54px;border-radius:50%;background:#E8EEF4;border:2px solid #E2FF00;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:22px;">📦</div>`;
+    (articulos || []).forEach(art => {
+      const lat = parseFloat(art.latitud);
+      const lng = parseFloat(art.longitud);
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
-        const precio = typeof art.precio === 'number' ? art.precio.toLocaleString('es-AR') : (art.precio || 0);
+      const idVend = String(art.vendedor?._id || art.vendedor?.id || '');
+      if (!idVend) return;
 
-        const popup = `
-          <div style="text-align:center;min-width:90px;max-width:140px;font-family:inherit;">
-            ${imgTag}
-            <div style="font-size:11px;font-weight:700;color:#111;line-height:1.3;word-break:break-word;">${art.titulo || 'Sin título'}</div>
-            <div style="font-size:11px;color:#555;margin-top:2px;">$${precio}</div>
-          </div>`;
+      if (!porVendedor[idVend]) {
+        porVendedor[idVend] = {
+          vendedor: art.vendedor || {},
+          articulos: [],
+          lat,
+          lng,
+        };
+      }
+      porVendedor[idVend].articulos.push(art);
+    });
 
+    // ── 2. Dibujar un pin por vendedor ────────────────────────────────────
+    Object.entries(porVendedor).forEach(([idVend, datos]) => {
+      try {
+        const { vendedor, articulos: arts, lat, lng } = datos;
+        const esPropio = idUsuarioLogueado && idVend === idUsuarioLogueado;
+
+        // Pin: azul propio, rojo ajeno
+        const colorPin   = esPropio ? '#3B82F6' : '#EF4444';
+        const colorBorde = esPropio ? '#ffffff'  : '#ffffff';
+        const tamano     = esPropio ? 18 : 15;
         const iconoPin = L.divIcon({
-          html: '<div style="width:14px;height:14px;background:#E2FF00;border:2.5px solid #111;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.35);"></div>',
-          iconSize: [14, 14], iconAnchor: [7, 7], className: '',
+          html: `<div style="
+            width:${tamano}px;height:${tamano}px;
+            background:${colorPin};
+            border:2.5px solid ${colorBorde};
+            border-radius:50%;
+            box-shadow:0 2px 8px rgba(0,0,0,.5);
+            ${esPropio ? 'outline:2.5px solid #93C5FD;outline-offset:2px;' : ''}
+          "></div>`,
+          iconSize: [tamano, tamano],
+          iconAnchor: [tamano/2, tamano/2],
+          className: '',
         });
 
-        L.marker([lat, lng], { icon: iconoPin })
+        // ── Tooltip: nombre del vendedor ──────────────────────────────────
+        const nombreVend = vendedor.nombre || 'Vendedor';
+        const tooltipLabel = esPropio
+          ? `<b style="color:#3B82F6;">● </b>${nombreVend} <span style="color:#3B82F6;font-size:10px;">(vos)</span>`
+          : nombreVend;
+
+        // ── Popup: avatar + nombre + lista de artículos ───────────────────
+        const avatarVend = vendedor.avatar
+          ? `<img src="${URL_BACK}${vendedor.avatar}"
+               onerror="this.style.display='none'"
+               style="width:44px;height:44px;object-fit:cover;border-radius:50%;border:2.5px solid ${colorPin};display:block;margin:0 auto 7px;">`
+          : `<div style="width:44px;height:44px;border-radius:50%;background:#E8EEF4;display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:20px;">👤</div>`;
+
+        const estrellas = vendedor.promedioValoracion
+          ? `<span style="color:#F59E0B;font-size:10px;">★</span><span style="font-size:10px;color:#555;"> ${Number(vendedor.promedioValoracion).toFixed(1)}</span>`
+          : '';
+
+        const listaArts = arts.map(a => {
+          const idArt = a._id || a.id || '';
+          const precio = (a.precioBase ?? a.precio ?? 0).toLocaleString('es-AR');
+          return `<div onclick="_popupAbrirDetalle('${idArt}')"
+                       style="padding:4px 6px;border-radius:5px;cursor:pointer;font-size:11px;
+                              font-weight:600;color:#111;line-height:1.3;
+                              border-bottom:1px solid #f0f0f0;
+                              transition:background .12s;"
+                       onmouseover="this.style.background='#f5f5f5'"
+                       onmouseout="this.style.background='transparent'">
+                    <span style="color:${colorPin};margin-right:3px;">•</span>
+                    ${a.titulo || 'Sin título'}
+                    <span style="color:#999;font-weight:400;margin-left:4px;">$${precio}</span>
+                  </div>`;
+        }).join('');
+
+        const botonPerfil = esPropio
+          ? ''
+          : `<button onclick="abrirPerfilPublico('${idVend}')"
+                     style="margin-top:8px;width:100%;padding:5px 0;border:none;border-radius:6px;
+                            background:${colorPin};color:#fff;font-size:11px;font-weight:700;
+                            cursor:pointer;font-family:inherit;">
+               Ver perfil completo
+             </button>`;
+
+        // Popup compacto: solo avatar + nombre + botón perfil (sin lista de artículos)
+        const popupHTML = esPropio
+          ? `<div style="font-family:'Montserrat',sans-serif;text-align:center;padding:6px 4px;min-width:110px;">
+               ${avatarVend}
+               <div style="font-size:12px;font-weight:700;color:#3B82F6;margin-top:4px;">${nombreVend}</div>
+               <div style="font-size:10px;color:#888;margin-top:2px;">${arts.length} publicación${arts.length !== 1 ? 'es' : ''} tuya${arts.length !== 1 ? 's' : ''}</div>
+             </div>`
+          : `<div style="font-family:'Montserrat',sans-serif;text-align:center;padding:6px 4px;min-width:120px;">
+               ${avatarVend}
+               <div style="font-size:12px;font-weight:700;color:#111;margin-top:4px;">${nombreVend}</div>
+               ${estrellas ? `<div style="margin:2px 0 6px;">${estrellas}</div>` : '<div style="margin-bottom:6px;"></div>'}
+               <button onclick="abrirPerfilPublico('${idVend}')"
+                       style="width:100%;padding:5px 0;border:none;border-radius:7px;
+                              background:#EF4444;color:#fff;font-size:11px;font-weight:700;
+                              cursor:pointer;font-family:inherit;letter-spacing:.3px;">
+                 Ver perfil completo
+               </button>
+             </div>`;
+
+        const marcador = L.marker([lat, lng], { icon: iconoPin })
           .addTo(_capaMarcadores)
-          .bindPopup(popup, { maxWidth: 160, minWidth: 110 });
+          .bindPopup(popupHTML, { maxWidth: 170, minWidth: 120, autoPan: true })
+          .bindTooltip(tooltipLabel, {
+            permanent: false, direction: 'top', opacity: 0.95,
+            className: 'mapa-tooltip-articulo',
+          });
+
+        // Doble clic: abrir perfil público del vendedor
+        marcador.on('dblclick', function(e) {
+          L.DomEvent.stopPropagation(e);
+          this.closePopup();
+          if (!esPropio) abrirPerfilPublico(idVend);
+        });
 
       } catch (errPin) {
-        console.warn('[Mapa] Falló el pin de un artículo:', errPin);
+        console.warn('[Mapa] Error al dibujar pin de vendedor:', errPin);
       }
     });
 
@@ -3664,6 +4107,155 @@ function actualizarMarcadoresArticulos(articulos) {
     console.error('[Mapa] Error en actualizarMarcadoresArticulos:', error);
   }
 }
+
+// Helper: abre el modal de detalle desde dentro de un popup Leaflet
+function _popupAbrirDetalle(idStr) {
+  // Cerrar todos los popups antes de abrir el modal
+  if (_mapaLeaflet) _mapaLeaflet.closePopup();
+  setTimeout(() => abrirDetalleArticuloById(idStr), 80);
+}
+
+// ── Perfil Público del Vendedor ────────────────────────────────────────────
+async function abrirPerfilPublico(idVendedor) {
+  const modal = document.getElementById('perfilPublicoModal');
+  if (!modal) return;
+
+  // Resetear a estado de carga
+  _resetPerfilPublicoModal();
+  modal.classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const URL_BACK = typeof URL_BACKEND !== 'undefined' ? URL_BACKEND : '';
+
+    // Fetch en paralelo: datos del usuario + sus artículos disponibles
+    const [respUsuario, respArticulos] = await Promise.all([
+      fetch(`${URL_BACK}/api/usuarios/${idVendedor}`).then(r => r.json()),
+      fetch(`${URL_BACK}/api/articulos?idVendedor=${idVendedor}`).then(r => r.json()),
+    ]);
+
+    const usuario   = respUsuario?.usuario || {};
+    const articulos = respArticulos?.articulos || [];
+
+    // ── Cabecera: avatar ──────────────────────────────────────────────────
+    const avatarWrap = document.getElementById('pp-avatar-wrap');
+    if (avatarWrap) {
+      if (usuario.avatar) {
+        avatarWrap.innerHTML = `<img src="${URL_BACK}${usuario.avatar}" alt="avatar"
+          onerror="this.parentElement.innerHTML='<span>👤</span>'">`;
+      } else {
+        avatarWrap.innerHTML = '<span>👤</span>';
+      }
+    }
+
+    // ── Nombre ────────────────────────────────────────────────────────────
+    const nombreEl = document.getElementById('pp-nombre');
+    if (nombreEl) {
+      const nombre = [usuario.nombre, usuario.apellido].filter(Boolean).join(' ') || 'Vecino/a';
+      nombreEl.textContent = nombre;
+    }
+
+    // ── Estrellas ─────────────────────────────────────────────────────────
+    const promedio = Number(usuario.promedioValoracion || usuario.puntuacion || 0);
+    const starsEl  = document.getElementById('pp-estrellas-stars');
+    const valEl    = document.getElementById('pp-estrellas-val');
+    const resenasEl= document.getElementById('pp-resenas');
+    if (starsEl) {
+      const llenas = Math.round(promedio);
+      starsEl.textContent = '★'.repeat(llenas) + '☆'.repeat(5 - llenas);
+      starsEl.style.color = llenas > 0 ? '#F59E0B' : '#ccc';
+    }
+    if (valEl)    valEl.textContent = promedio > 0 ? promedio.toFixed(1) : '—';
+    if (resenasEl) {
+      const cant = usuario.cantidadReseñas || 0;
+      resenasEl.textContent = cant > 0 ? `(${cant} reseña${cant !== 1 ? 's' : ''})` : '';
+    }
+
+    // ── Ubicación ─────────────────────────────────────────────────────────
+    const ubicEl = document.getElementById('pp-ubicacion');
+    if (ubicEl) {
+      const ubic = usuario.ubicacionPreferida || usuario.direccion || '';
+      ubicEl.innerHTML = ubic
+        ? `<span>📍</span> <span>${ubic}</span>`
+        : '';
+    }
+
+    // ── Grilla de artículos ───────────────────────────────────────────────
+    const subtituloEl = document.getElementById('pp-subtitulo');
+    const grillaEl    = document.getElementById('pp-grilla');
+
+    if (subtituloEl) {
+      subtituloEl.textContent = articulos.length > 0
+        ? `${articulos.length} artículo${articulos.length !== 1 ? 's' : ''} disponible${articulos.length !== 1 ? 's' : ''}`
+        : 'Artículos';
+    }
+
+    if (grillaEl) {
+      if (articulos.length === 0) {
+        grillaEl.innerHTML = '<div class="pp-empty">Este vendedor no tiene artículos disponibles por ahora.</div>';
+      } else {
+        grillaEl.innerHTML = articulos.map(art => {
+          const idArt   = art._id || art.id || '';
+          const titulo  = art.titulo || 'Sin título';
+          const precio  = (art.precioBase ?? art.precio ?? 0).toLocaleString('es-AR');
+          const cobro   = art.tipoCobro || 'por día';
+          const imgSrc  = (art.imagenes && art.imagenes.length > 0) ? art.imagenes[0] : (art.imagen || null);
+          const imgEl   = imgSrc
+            ? `<img class="pp-card-img" src="${URL_BACK}${imgSrc}" alt="${titulo}"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="pp-card-img-placeholder" style="display:none;">📦</div>`
+            : `<div class="pp-card-img-placeholder">📦</div>`;
+
+          return `
+            <div class="pp-card" onclick="_ppAbrirDetalle('${idArt}')">
+              ${imgEl}
+              <div class="pp-card-body">
+                <div class="pp-card-titulo">${titulo}</div>
+                <div class="pp-card-precio">$${precio} <span class="pp-card-cobro">/ ${cobro}</span></div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+    }
+
+  } catch (err) {
+    console.error('[PerfilPublico] Error al cargar:', err);
+    const grillaEl = document.getElementById('pp-grilla');
+    if (grillaEl) grillaEl.innerHTML = '<div class="pp-empty">No se pudo cargar el perfil. Intentá de nuevo.</div>';
+  }
+}
+
+function cerrarPerfilPublico() {
+  const modal = document.getElementById('perfilPublicoModal');
+  if (modal) modal.classList.remove('abierto');
+  document.body.style.overflow = '';
+}
+
+function _resetPerfilPublicoModal() {
+  const ids = { 'pp-nombre': '—', 'pp-estrellas-stars': '☆☆☆☆☆', 'pp-estrellas-val': '…',
+                'pp-resenas': '', 'pp-ubicacion': '', 'pp-subtitulo': 'Artículos disponibles' };
+  Object.entries(ids).forEach(([id, txt]) => {
+    const el = document.getElementById(id); if (el) el.textContent = txt;
+  });
+  const avatarWrap = document.getElementById('pp-avatar-wrap');
+  if (avatarWrap) avatarWrap.innerHTML = '<span>👤</span>';
+  const grilla = document.getElementById('pp-grilla');
+  if (grilla) grilla.innerHTML = '<div class="pp-loading">Cargando perfil...</div>';
+}
+
+// Abre el detalle desde la grilla del perfil público y cierra el modal de perfil
+function _ppAbrirDetalle(idStr) {
+  cerrarPerfilPublico();
+  setTimeout(() => abrirDetalleArticuloById(idStr), 120);
+}
+
+// Tecla Escape para cerrar el perfil público
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const pp = document.getElementById('perfilPublicoModal');
+    if (pp && pp.classList.contains('abierto')) cerrarPerfilPublico();
+  }
+});
 
 // ── Autocomplete de zona con Nominatim + panTo ─────────────────────────────
 function buscarZonaMapa() {
@@ -3755,264 +4347,310 @@ actualizarAvatar();
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="loginModal" onclick="if(event.target.id==='loginModal') cerrarModalLogin()">
+<div class="modal-overlay hidden" id="loginModal" onclick="cerrarModalLogin(event)">
   <div class="registro-modal" onclick="event.stopPropagation()">
     <div class="registro-header">
       <div class="registro-logo">Equip<span>Ya</span></div>
     </div>
-    <div class="registro-titulo">Iniciar Sesion</div>
-    <div class="registro-sub">Ingresa para alquilar o publicar.</div>
+    <div class="registro-titulo">Iniciar sesión</div>
+    <div class="registro-sub">Accedé a tu cuenta para alquilar o publicar herramientas.</div>
     <div class="campo-grupo">
       <label for="log-email">Email</label>
-      <input type="email" id="log-email" placeholder="juan@ejemplo.com"/>
+      <input type="email" id="log-email" placeholder="juan@ejemplo.com" autocomplete="email"/>
     </div>
     <div class="campo-grupo">
       <label for="log-contraseña">Contraseña</label>
-      <input type="password" id="log-contraseña" placeholder="••••••••"/>
+      <input type="password" id="log-contraseña" placeholder="••••••••" autocomplete="current-password"/>
     </div>
     <button class="btn-registrarse" id="btnLogin" onclick="enviarLogin()">
-      <span id="btn-login-texto">Ingresar</span>
+      <span id="btn-login-texto">Entrar</span>
       <div class="spinner" id="log-spinner"></div>
     </button>
     <div class="alerta-registro" id="log-alerta"></div>
     <div class="registro-pie">
-      ¿No tenes cuenta? <a onclick="cerrarModalLogin(); abrirModalRegistro()">Registrate gratis</a>
+      ¿No tenés cuenta? <a onclick="abrirModalRegistro()">Registrate gratis</a>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="perfilModal" onclick="if(event.target.id==='perfilModal') cerrarPerfilModal()">
+<div class="modal-overlay hidden" id="perfilModal" onclick="cerrarPerfilModal(event)">
   <div class="perfil-modal" onclick="event.stopPropagation()">
-
     <div class="perfil-modal-header">
       <div class="perfil-modal-titulo">Mi Perfil</div>
-      <button class="perfil-modal-cerrar" onclick="cerrarPerfilModal()" title="Cerrar">&times;</button>
+      <button onclick="cerrarPerfilModal()" style="background:none;border:none;cursor:pointer;color:var(--texto-muted);font-size:20px;line-height:1;">✕</button>
     </div>
 
+    <!-- Avatar + nombre + calificación -->
     <div class="perfil-avatar-preview">
       <div class="perfil-avatar-contenedor-imagen">
         <div class="perfil-avatar-circulo" id="perfil-avatar-circulo">?</div>
-        <img class="perfil-avatar-img-real" id="perfil-avatar-img-real" src="" alt="Avatar real" style="display: none;"/>
+        <img class="perfil-avatar-img-real" id="perfil-avatar-img-real"
+             src="" alt="Avatar"
+             onerror="this.style.display='none';document.getElementById('perfil-avatar-circulo').style.display='flex';">
       </div>
       <div class="perfil-avatar-info">
         <div class="perfil-avatar-nombre" id="perfil-preview-nombre">—</div>
         <div class="perfil-avatar-email"  id="perfil-preview-email">—</div>
+        <!-- Estrellas -->
+        <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-top:6px;">
+          <span id="perfil-ro-stars" style="color:#F59E0B;font-size:16px;letter-spacing:1px;">☆☆☆☆☆</span>
+          <span id="perfil-ro-rating" style="font-size:13px;font-weight:700;color:var(--texto-primario);">—</span>
+          <span id="perfil-ro-resenas" style="font-size:11px;color:var(--texto-muted);">(sin reseñas)</span>
+        </div>
+        <!-- Hint foto -->
+        <div style="margin-top:10px;font-size:11px;color:var(--texto-muted);background:var(--bg-input);
+                    border-radius:8px;padding:6px 10px;line-height:1.4;">
+          📷 Para cambiar tu foto andá a <strong>Configuración</strong>
+        </div>
       </div>
     </div>
 
-    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:16px;">
-      ✏️ Para editar tus datos, usá la sección <strong>Configuración</strong> del menú de perfil.
-    </div>
-    <div class="perfil-seccion-titulo">Datos personales</div>
-    <div class="perfil-fila">
-      <div class="campo-grupo">
-        <label for="perfil-nombre">Nombre</label>
-        <input type="text" id="perfil-nombre" placeholder="—" disabled/>
+    <!-- Datos de solo lectura -->
+    <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:800;color:var(--texto-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Nombre</div>
+          <div id="perfil-ro-nombre" style="font-size:13px;font-weight:600;color:var(--texto-primario);
+               background:var(--bg-input);border-radius:10px;padding:9px 12px;border:1px solid var(--borde);">—</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:800;color:var(--texto-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Apellido</div>
+          <div id="perfil-ro-apellido" style="font-size:13px;font-weight:600;color:var(--texto-primario);
+               background:var(--bg-input);border-radius:10px;padding:9px 12px;border:1px solid var(--borde);">—</div>
+        </div>
       </div>
-      <div class="campo-grupo">
-        <label for="perfil-apellido">Apellido</label>
-        <input type="text" id="perfil-apellido" placeholder="—" disabled/>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--texto-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Email</div>
+        <div id="perfil-ro-email" style="font-size:13px;font-weight:600;color:var(--texto-primario);
+             background:var(--bg-input);border-radius:10px;padding:9px 12px;border:1px solid var(--borde);">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--texto-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Teléfono</div>
+        <div id="perfil-ro-telefono" style="font-size:13px;font-weight:600;color:var(--texto-secundario);
+             background:var(--bg-input);border-radius:10px;padding:9px 12px;border:1px solid var(--borde);">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--texto-muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Dirección</div>
+        <div id="perfil-ro-direccion" style="font-size:13px;font-weight:600;color:var(--texto-secundario);
+             background:var(--bg-input);border-radius:10px;padding:9px 12px;border:1px solid var(--borde);">—</div>
       </div>
     </div>
-    <div class="campo-grupo">
-      <label for="perfil-email">Email</label>
-      <input type="email" id="perfil-email" placeholder="—" disabled/>
-    </div>
-    <div class="perfil-seccion-titulo">Contacto y ubicación</div>
-    <div class="campo-grupo">
-      <label for="perfil-telefono">Teléfono</label>
-    <input type="tel" id="perfil-telefono" placeholder="—" disabled/>
-    </div>
-    <div class="campo-grupo">
-      <label>Ubicación preferida</label>
-      <input type="text" id="perfil-ubicacion-pref" placeholder="—" disabled/>
-    </div>
-    <button type="button" class="btn-registrarse" onclick="cerrarPerfilModal(); irAConfiguracion()" style="margin-top:8px;">
-      ⚙️ Ir a Configuración para editar
+
+    <!-- CTA a Configuración -->
+    <button onclick="cerrarPerfilModal();abrirConfiguracion();"
+            style="width:100%;margin-top:18px;padding:11px;background:#111;border:none;
+                   border-radius:12px;color:#E2FF00;font-weight:800;font-size:13px;
+                   cursor:pointer;font-family:inherit;">
+      ⚙️ Editar en Configuración
     </button>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="editArticuloModal" onclick="if(event.target.id==='editArticuloModal') cerrarModalEdicionArticulo()">
-  <div class="upload-modal" onclick="event.stopPropagation()">
-    <div class="upload-title">Editar publicación</div>
-    <div class="upload-sub">Modificá el contenido de tu herramienta o servicio</div>
-    <form onsubmit="guardarEdicionArticulo(event)">
-      <label class="field-lbl">Nombre / Título</label>
-      <input class="field-inp" id="edit-art-nombre" type="text" required />
-      <label class="field-lbl">Precio por día o visita</label>
-      <input class="field-inp" id="edit-art-precio" type="number" required />
-      <button type="submit" class="btn-publish" style="background:#E2FF00; color:#111; font-weight:800;">Guardar cambios</button>
-      <button type="button" class="btn-publish" style="background:#F0F0F0; color:#111; font-weight:700; margin-top:8px;" onclick="cerrarModalEdicionArticulo()">Cancelar</button>
+<div class="modal-overlay hidden" id="editArticuloModal" onclick="cerrarModalEdicionArticulo()">
+  <div class="registro-modal" onclick="event.stopPropagation()" style="max-width:400px;">
+    <div class="registro-titulo" style="margin-bottom:16px;">Editar publicación</div>
+    <form onsubmit="guardarEdicionArticulo(event)" novalidate>
+      <div class="campo-grupo">
+        <label for="edit-art-nombre">Título</label>
+        <input type="text" id="edit-art-nombre" placeholder="Ej: Taladro percutor Bosch"/>
+      </div>
+      <div class="campo-grupo">
+        <label for="edit-art-precio">Precio por día ($)</label>
+        <input type="number" id="edit-art-precio" placeholder="Ej: 2500" min="0"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn-registrarse" type="submit" style="flex:1;">Guardar cambios</button>
+        <button type="button" onclick="cerrarModalEdicionArticulo()"
+                style="flex:1;padding:12px;background:var(--bg-input);border:none;border-radius:12px;
+                       font-weight:700;cursor:pointer;color:var(--texto-secundario);font-family:inherit;">
+          Cancelar
+        </button>
+      </div>
     </form>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- MODAL CONFIGURACIÓN                                 -->
-<!-- ═══════════════════════════════════════════════════ -->
-<div class="modal-overlay hidden" id="configuracionModal" onclick="if(event.target.id==='configuracionModal') cerrarConfiguracion()">
+<div class="modal-overlay hidden" id="configuracionModal" onclick="cerrarConfiguracion(event)">
   <div class="config-modal" onclick="event.stopPropagation()">
 
+    <!-- Header -->
     <div class="config-header">
-      <div class="config-header-titulo">⚙️ Configuración</div>
-      <button class="perfil-modal-cerrar" onclick="cerrarConfiguracion()">&times;</button>
+      <div class="config-header-titulo">Configuración</div>
+      <button onclick="cerrarConfiguracion()"
+              style="background:none;border:none;cursor:pointer;color:var(--texto-muted);font-size:20px;line-height:1;">✕</button>
     </div>
 
+    <!-- Tabs -->
     <div class="config-tabs">
-      <button class="config-tab active" onclick="setConfigTab('perfil')">👤 Mi Perfil</button>
+      <button class="config-tab active" onclick="setConfigTab('perfil')">👤 Cuenta</button>
       <button class="config-tab"        onclick="setConfigTab('ubicacion')">📍 Ubicación</button>
       <button class="config-tab"        onclick="setConfigTab('seguridad')">🔒 Seguridad</button>
     </div>
 
-    <!-- Sección 1: Datos de Contacto -->
-    <div id="config-sec-perfil" class="config-section">
-      <div class="perfil-seccion-titulo">Datos de Contacto</div>
-      <div class="perfil-avatar-preview" style="margin-bottom:16px;">
-        <div class="perfil-avatar-contenedor-imagen">
-          <div class="perfil-avatar-circulo" id="cfg-avatar-circulo">?</div>
-          <img class="perfil-avatar-img-real" id="cfg-avatar-img" src="" alt="Avatar" style="display:none;"/>
-          <label class="perfil-avatar-subir-btn" for="cfg-foto" title="Cambiar foto de perfil">📷</label>
-          <input type="file" id="cfg-foto" accept="image/*" style="display:none;" onchange="previsualizarAvatarConfig(this)"/>
+    <!-- ── Sección: Perfil ──────────────────────────────────────────── -->
+    <div class="config-section" id="config-sec-perfil">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        <div class="perfil-avatar-contenedor-imagen" style="position:relative;width:64px;height:64px;">
+          <div class="perfil-avatar-circulo" id="cfg-avatar-circulo"
+               style="width:64px;height:64px;font-size:24px;">?</div>
+          <img id="cfg-avatar-img"
+               src="" alt="Avatar"
+               style="display:none;width:64px;height:64px;object-fit:cover;border-radius:50%;border:2px solid var(--borde);"
+               onerror="this.style.display='none';document.getElementById('cfg-avatar-circulo').style.display='flex';">
         </div>
-        <div class="perfil-avatar-info">
-          <div class="perfil-avatar-nombre" id="cfg-preview-nombre">—</div>
-          <div class="perfil-avatar-email"  id="cfg-preview-email">—</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--texto-primario);" id="cfg-preview-nombre">—</div>
+          <div style="font-size:12px;color:var(--texto-muted);" id="cfg-preview-email">—</div>
         </div>
       </div>
-      <div class="perfil-fila">
+      <form onsubmit="guardarConfigPerfil(event)" novalidate>
+        <div class="perfil-fila">
+          <div class="campo-grupo">
+            <label for="cfg-nombre">Nombre</label>
+            <input type="text" id="cfg-nombre" placeholder="Juan" autocomplete="given-name"/>
+          </div>
+          <div class="campo-grupo">
+            <label for="cfg-apellido">Apellido</label>
+            <input type="text" id="cfg-apellido" placeholder="García" autocomplete="family-name"/>
+          </div>
+        </div>
         <div class="campo-grupo">
-          <label for="cfg-nombre">Nombre</label>
-          <input type="text" id="cfg-nombre" placeholder="Tu nombre"/>
+          <label for="cfg-telefono">Teléfono <span style="color:#999;font-weight:400;">(opcional)</span></label>
+          <input type="tel" id="cfg-telefono" placeholder="+54 11 1234-5678"/>
         </div>
         <div class="campo-grupo">
-          <label for="cfg-apellido">Apellido</label>
-          <input type="text" id="cfg-apellido" placeholder="Tu apellido"/>
+          <label for="cfg-foto">Foto de perfil <span style="color:#999;font-weight:400;">(max 2 MB)</span></label>
+          <input type="file" id="cfg-foto" accept="image/jpeg,image/png,image/webp"
+                 onchange="previsualizarAvatarConfig(this)" style="font-size:12px;"/>
         </div>
-      </div>
-      <div class="campo-grupo">
-        <label for="cfg-telefono">Teléfono</label>
-        <input type="tel" id="cfg-telefono" placeholder="Ej: 1165336599"/>
-      </div>
-      <button class="btn-registrarse" id="btn-guardar-perfil-cfg" type="button" onclick="guardarDatosContacto()" style="margin-top:4px;">
-        <span id="txt-guardar-perfil-cfg">Guardar cambios</span>
-        <div class="spinner" id="spin-guardar-perfil-cfg"></div>
-      </button>
-      <div class="alerta-registro" id="alerta-cfg-perfil"></div>
+        <button class="btn-registrarse" type="submit">Guardar cuenta</button>
+        <div class="alerta-registro" id="alerta-cfg-perfil"></div>
+      </form>
     </div>
 
-    <!-- Sección 2: Ubicación Preferida -->
-    <div id="config-sec-ubicacion" class="config-section hidden">
-      <div class="perfil-seccion-titulo">Ubicación Predeterminada</div>
-      <p style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5;">
-        Esta localidad se usa como <strong>respaldo automático</strong> cuando publicás un artículo y el GPS del navegador no está disponible o fue denegado.
-      </p>
+    <!-- ── Sección: Ubicación ───────────────────────────────────────── -->
+    <div class="config-section hidden" id="config-sec-ubicacion">
       <div class="campo-grupo">
-        <label for="cfg-ubicacion-pref">Localidad predeterminada</label>
-        <div class="ubicacion-wrap">
-          <input type="text" id="cfg-ubicacion-pref"
-            placeholder="Ej: Glew, Almirante Brown, Buenos Aires"
-            list="cfg-sug-ubicacion" oninput="buscarUbicacionConfig()" autocomplete="off"/>
-          <button type="button" class="btn-gps" onclick="obtenerUbicacionGPSConfig()" title="Detectar mi ubicación actual">🎯</button>
-        </div>
-        <datalist id="cfg-sug-ubicacion"></datalist>
+        <label for="cfg-ubicacion-pref">Barrio / Localidad preferida</label>
+        <input type="text" id="cfg-ubicacion-pref"
+               placeholder="Ej: Villa del Parque, CABA"
+               style="margin-bottom:0;"/>
       </div>
-      <button class="btn-registrarse" id="btn-guardar-ubic-cfg" type="button" onclick="guardarUbicacionPreferida()" style="margin-top:4px;">
-        <span id="txt-guardar-ubic-cfg">Guardar ubicación</span>
-        <div class="spinner" id="spin-guardar-ubic-cfg"></div>
+      <div id="mapa-config-leaflet"></div>
+      <p class="mapa-config-hint">🗺️ Hacé clic en el mapa para fijar tu ubicación exacta</p>
+      <button class="btn-registrarse" type="button" onclick="guardarConfigUbicacion()" style="margin-top:12px;">
+        Guardar ubicación
       </button>
       <div class="alerta-registro" id="alerta-cfg-ubicacion"></div>
     </div>
 
-    <!-- Sección 3: Seguridad -->
-    <div id="config-sec-seguridad" class="config-section hidden">
-      <div class="perfil-seccion-titulo">Cambiar Contraseña</div>
-      <div class="campo-grupo">
-        <label for="cfg-pass-actual">Contraseña actual</label>
-        <input type="password" id="cfg-pass-actual" placeholder="••••••••"/>
-      </div>
-      <div class="campo-grupo">
-        <label for="cfg-pass-nueva">Nueva contraseña <span style="color:#999;font-weight:400">(mínimo 6 caracteres)</span></label>
-        <input type="password" id="cfg-pass-nueva" placeholder="••••••••"/>
-      </div>
-      <div class="campo-grupo">
-        <label for="cfg-pass-confirmar">Confirmá la nueva contraseña</label>
-        <input type="password" id="cfg-pass-confirmar" placeholder="••••••••"/>
-      </div>
-      <button class="btn-registrarse" id="btn-cambiar-pass" type="button" onclick="cambiarContrasena()" style="margin-top:4px;">
-        <span id="txt-cambiar-pass">Cambiar contraseña</span>
-        <div class="spinner" id="spin-cambiar-pass"></div>
-      </button>
-      <div class="alerta-registro" id="alerta-cfg-seguridad"></div>
+    <!-- ── Sección: Seguridad ───────────────────────────────────────── -->
+    <div class="config-section hidden" id="config-sec-seguridad">
+      <form onsubmit="guardarConfigContrasena(event)" novalidate>
+        <div class="campo-grupo">
+          <label for="cfg-pass-actual">Contraseña actual</label>
+          <input type="password" id="cfg-pass-actual" placeholder="••••••••" autocomplete="current-password"/>
+        </div>
+        <div class="campo-grupo">
+          <label for="cfg-pass-nueva">Nueva contraseña <span style="color:#999;font-weight:400;">(mínimo 6 caracteres)</span></label>
+          <input type="password" id="cfg-pass-nueva" placeholder="••••••••" autocomplete="new-password"/>
+        </div>
+        <div class="campo-grupo">
+          <label for="cfg-pass-confirmar">Confirmar nueva contraseña</label>
+          <input type="password" id="cfg-pass-confirmar" placeholder="••••••••" autocomplete="new-password"/>
+        </div>
+        <button class="btn-registrarse" type="submit">Cambiar contraseña</button>
+        <div class="alerta-registro" id="alerta-cfg-seguridad"></div>
+      </form>
 
-      <div class="divider" style="margin:22px 0;"></div>
-
-      <div class="perfil-seccion-titulo" style="color:#EF4444;">⚠️ Zona de Peligro</div>
-      <p style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.5;">
-        Esta acción es <strong>irreversible</strong>. Eliminará tu cuenta y todos tus datos de forma permanente.
-      </p>
-      <button type="button" class="zona-peligro-btn" onclick="eliminarCuenta()">
-        🗑️ Eliminar mi cuenta definitivamente
-      </button>
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--borde);">
+        <div style="font-size:11px;font-weight:800;color:#EF4444;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;">⚠️ Zona de Peligro</div>
+        <p style="font-size:11px;color:var(--texto-muted);margin-bottom:12px;">Esta acción es permanente e irreversible. Tu cuenta, publicaciones y conversaciones serán eliminadas.</p>
+        <button class="zona-peligro-btn" onclick="confirmarEliminarCuenta()">🗑️ Eliminar mi cuenta</button>
+      </div>
     </div>
+    <!-- /.config-section seguridad -->
 
-  </div>
-</div>
+  </div><!-- /.config-modal -->
+</div><!-- /.configuracionModal -->
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- MODAL DETALLE DE ARTÍCULO                           -->
-<!-- ═══════════════════════════════════════════════════ -->
-<div class="modal-overlay hidden" id="detalleArticuloModal" onclick="if(event.target.id==='detalleArticuloModal') cerrarDetalleArticulo()">
+<!-- ══ MODAL DETALLE DE ARTÍCULO ══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="detalleArticuloModal" onclick="cerrarDetalleArticulo()">
   <div class="detalle-modal" onclick="event.stopPropagation()">
-    <button class="detalle-cerrar" onclick="cerrarDetalleArticulo()">&times;</button>
+    <button class="detalle-cerrar" onclick="cerrarDetalleArticulo()">✕</button>
 
-    <!-- Carrusel de imágenes -->
+    <!-- Carrusel -->
     <div class="detalle-carrusel" id="detalle-carrusel">
-      <div class="detalle-carrusel-placeholder" id="detalle-placeholder">🔧</div>
-      <!-- Las <img> se inyectan por JS -->
-      <button class="carrusel-btn carrusel-prev" id="carrusel-prev" onclick="moverCarrusel(-1)" style="display:none;">&#8249;</button>
-      <button class="carrusel-btn carrusel-next" id="carrusel-next" onclick="moverCarrusel(1)"  style="display:none;">&#8250;</button>
+      <div class="detalle-carrusel-placeholder" id="detalle-placeholder">🖼️</div>
+      <button class="carrusel-btn carrusel-prev" id="carrusel-prev" onclick="moverCarrusel(-1)">&#8249;</button>
+      <button class="carrusel-btn carrusel-next" id="carrusel-next" onclick="moverCarrusel(1)">&#8250;</button>
       <div class="carrusel-dots" id="carrusel-dots"></div>
     </div>
 
-    <!-- Info del artículo -->
+    <!-- Cuerpo -->
     <div class="detalle-cuerpo">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-        <div class="detalle-tipo-badge" id="detalle-tipo-badge">📦 Producto</div>
-        <div class="detalle-rating">
-          ★ <span id="detalle-rating-num">5.0</span>
-        </div>
-      </div>
+      <span class="detalle-tipo-badge" id="detalle-tipo-badge">📦 Producto</span>
 
       <div class="detalle-titulo" id="detalle-titulo">—</div>
 
       <div class="detalle-precio">
-        $<span id="detalle-precio-num" class="precio-monto">0</span><span id="detalle-tipo-cobro" class="precio-cobro"> / día</span>
+        <span style="font-size:18px;font-weight:700;">$</span>
+        <span class="precio-monto" id="detalle-precio-num">0</span>
+        <span class="precio-cobro" id="detalle-tipo-cobro">/ por día</span>
       </div>
 
       <div class="detalle-tags" id="detalle-tags"></div>
 
       <div class="detalle-descripcion" id="detalle-descripcion" style="display:none;"></div>
 
-      <!-- Info del vendedor -->
+      <!-- Vendedor -->
       <div class="detalle-vendedor">
         <div id="detalle-avatar-wrap"></div>
         <div class="detalle-vendedor-info">
           <div class="detalle-vendedor-nombre" id="detalle-vendedor-nombre">—</div>
-          <div class="detalle-vendedor-sub">Vendedor verificado</div>
+          <div class="detalle-rating">
+            ★ <span id="detalle-rating-num">0.0</span>
+            <span style="color:var(--texto-muted);font-weight:400;margin-left:2px;">puntuación</span>
+          </div>
+          <div class="detalle-vendedor-sub" id="detalle-vendedor-rep"></div>
         </div>
-        <div class="detalle-rating">★ <span id="detalle-vendedor-rep">0</span></div>
+        <button onclick="cerrarDetalleArticulo();if(_detalleArticuloActual?.vendedor?._id)abrirPerfilPublico(_detalleArticuloActual.vendedor._id);"
+                style="padding:6px 12px;border:1.5px solid var(--borde);border-radius:20px;
+                       background:none;font-size:11px;font-weight:700;cursor:pointer;
+                       color:var(--texto-secundario);font-family:inherit;flex-shrink:0;white-space:nowrap;">
+          Ver perfil
+        </button>
       </div>
 
-      <!-- Botón Chatear -->
       <button class="btn-chatear" onclick="iniciarChatDesdeDetalle()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-        </svg>
-        Chatear con el vendedor
+        💬 Consultar / Reservar
       </button>
     </div>
   </div>
 </div>
 
+<!-- ══ MODAL PERFIL PÚBLICO ═══════════════════════════════════════════════ -->
+<div id="perfilPublicoModal" onclick="if(event.target===this)cerrarPerfilPublico()">
+  <div class="pp-contenedor">
+    <div class="pp-header">
+      <button class="pp-cerrar" onclick="cerrarPerfilPublico()">✕</button>
+      <div class="pp-avatar-wrap" id="pp-avatar-wrap"><span>👤</span></div>
+      <div class="pp-info">
+        <div class="pp-nombre" id="pp-nombre">—</div>
+        <div class="pp-estrellas">
+          <span class="pp-estrellas-stars" id="pp-estrellas-stars">☆☆☆☆☆</span>
+          <span class="pp-estrellas-val"   id="pp-estrellas-val">0.0</span>
+          <span class="pp-resenas"         id="pp-resenas"></span>
+        </div>
+        <div class="pp-ubicacion" id="pp-ubicacion"></div>
+      </div>
+    </div>
+    <div class="pp-body">
+      <div class="pp-subtitulo" id="pp-subtitulo">Artículos disponibles</div>
+      <div class="pp-grilla"   id="pp-grilla"><div class="pp-loading">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
 </body>
+</html>

@@ -63,7 +63,7 @@ const login = async (solicitud, respuesta, siguiente) => {
 const actualizarPerfil = async (solicitud, respuesta, siguiente) => {
     try {
         const idUsuario = solicitud.params.id || solicitud.body.idUsuario;
-        const { nombre, apellido, email, telefono, direccion, ubicacionPreferida } = solicitud.body;
+        const { nombre, apellido, email, telefono, direccion, ubicacionPreferida, latitud, longitud } = solicitud.body;
         const camposActualizables = {};
         if (nombre             !== undefined) camposActualizables.nombre             = nombre;
         if (apellido           !== undefined) camposActualizables.apellido           = apellido;
@@ -71,6 +71,8 @@ const actualizarPerfil = async (solicitud, respuesta, siguiente) => {
         if (telefono           !== undefined) camposActualizables.telefono           = telefono;
         if (direccion          !== undefined) camposActualizables.direccion          = direccion;
         if (ubicacionPreferida !== undefined) camposActualizables.ubicacionPreferida = ubicacionPreferida;
+        if (latitud  !== undefined && latitud  !== null) camposActualizables.latitud  = Number(latitud);
+        if (longitud !== undefined && longitud !== null) camposActualizables.longitud = Number(longitud);
         if (solicitud.file) camposActualizables.avatar = `/uploads/profiles/${solicitud.file.filename}`;
 
         const usuarioActualizado = await Usuario.findByIdAndUpdate(
@@ -103,6 +105,8 @@ const actualizarPerfil = async (solicitud, respuesta, siguiente) => {
                 direccion:          usuarioActualizado.direccion          || null,
                 avatar:             usuarioActualizado.avatar             || null,
                 ubicacionPreferida: usuarioActualizado.ubicacionPreferida || null,
+                latitud:            usuarioActualizado.latitud            ?? null,
+                longitud:           usuarioActualizado.longitud           ?? null,
             },
         });
     } catch (error) {
